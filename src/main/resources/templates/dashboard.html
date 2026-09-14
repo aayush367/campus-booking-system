@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Student Dashboard | Campus Booking System
+  </title>
+
+  <link
+          rel="stylesheet"
+          th:href="@{/css/dashboard.css}"
+  >
+
+  <link
+          rel="stylesheet"
+          th:href="@{/css/calendar.css}"
+  >
+
+  <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+
+  <link rel="stylesheet" th:href="@{/css/app-theme.css}">
+
+  <link rel="stylesheet" th:href="@{/css/form-validate.css}">
+</head>
+
+<body>
+
+
+<!-- ========================================================= -->
+<!-- HEADER -->
+<!-- ========================================================= -->
+
+<header class="top-header">
+
+  <div class="header-left">
+
+    <div class="header-logo">
+
+      <i class="fa-solid fa-calendar-check"></i>
+
+    </div>
+
+    <div>
+
+      <h1>
+        Campus Booking System
+      </h1>
+
+      <p>
+        Student Dashboard
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="header-right">
+
+
+    <!-- NOTIFICATION -->
+
+    <div class="notification-wrapper">
+
+      <button
+              type="button"
+              class="notification-button"
+              id="notificationButton"
+      >
+
+        <i class="fa-regular fa-bell"></i>
+
+        <span class="notification-count"
+              th:if="${unreadCount != null and unreadCount > 0}"
+              th:text="${unreadCount}">
+          0
+        </span>
+
+      </button>
+
+
+      <div
+              class="notification-dropdown"
+              id="notificationDropdown"
+      >
+
+        <div class="notification-title">
+
+          <div>
+
+            <h3>
+              Notifications
+            </h3>
+
+            <span th:text="${(unreadCount != null ? unreadCount : 0) + ' unread'}">
+              0 unread
+            </span>
+
+          </div>
+
+          <form th:action="@{/notifications/read-all}" method="post">
+            <button type="submit">
+              Mark all read
+            </button>
+          </form>
+
+        </div>
+
+
+        <a th:href="@{/notifications}" class="notification-viewall"
+           style="display:block;padding:8px 14px;font-size:13px;font-weight:600;color:#203e96;">
+          View all notifications
+        </a>
+
+
+        <div class="notification-empty"
+             th:if="${notifications == null or #lists.isEmpty(notifications)}">
+          You have no notifications yet.
+        </div>
+
+
+        <div class="notification-item"
+             th:each="note : ${notifications}"
+             th:classappend="${note.read} ? 'is-read' : 'is-unread'">
+
+          <div class="notification-icon"
+               th:classappend="${#strings.toLowerCase(note.type)}">
+
+            <i class="fa-solid fa-check"
+               th:if="${note.type == 'APPROVED'}"></i>
+            <i class="fa-solid fa-xmark"
+               th:if="${note.type == 'REJECTED'}"></i>
+            <i class="fa-solid fa-exclamation"
+               th:if="${note.type == 'PENDING'}"></i>
+            <i class="fa-regular fa-bell"
+               th:if="${note.type != 'APPROVED' and note.type != 'REJECTED' and note.type != 'PENDING'}"></i>
+
+          </div>
+
+          <div>
+
+            <strong th:text="${note.title}">
+              Notification
+            </strong>
+
+            <p th:text="${note.message}">
+              Message
+            </p>
+
+            <small th:text="${#temporals.format(note.createdAt, 'dd MMM yyyy, HH:mm')}">
+              Just now
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- USER -->
+
+    <div class="user-info">
+
+      <div class="user-details">
+
+        <strong
+                th:text="${user.fullName}"
+        >
+          John Student
+        </strong>
+
+        <span
+                th:text="${user.email}"
+        >
+                    student@university.edu
+                </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- LOGOUT -->
+
+    <a
+            th:href="@{/logout}"
+            class="logout-link"
+    >
+
+      <i class="fa-solid fa-arrow-right-from-bracket"></i>
+
+      Logout
+
+    </a>
+
+  </div>
+
+</header>
+
+
+<!-- ========================================================= -->
+<!-- NAVIGATION -->
+<!-- ========================================================= -->
+
+<nav class="dashboard-nav">
+
+  <button
+          type="button"
+          class="nav-tab active"
+          data-tab="dashboardView"
+  >
+
+    <i class="fa-solid fa-table-cells-large"></i>
+
+    Dashboard
+
+  </button>
+
+
+  <button
+          type="button"
+          class="nav-tab"
+          data-tab="searchView"
+  >
+
+    <i class="fa-solid fa-magnifying-glass"></i>
+
+    Search
+
+  </button>
+
+
+  <button
+          type="button"
+          class="nav-tab"
+          data-tab="calendarView"
+  >
+
+    <i class="fa-regular fa-calendar"></i>
+
+    Calendar
+
+  </button>
+
+
+  <button
+          type="button"
+          class="new-booking-btn"
+          id="openBookingModal"
+  >
+
+    <i class="fa-solid fa-plus"></i>
+
+    New Booking
+
+  </button>
+
+</nav>
+
+
+<!-- ========================================================= -->
+<!-- MAIN CONTENT -->
+<!-- ========================================================= -->
+
+<main class="main-content">
+
+
+  <!-- ===================================================== -->
+  <!-- DASHBOARD -->
+  <!-- ===================================================== -->
+
+  <section
+          id="dashboardView"
+          class="tab-view active-view"
+  >
+
+
+    <!-- SUCCESS -->
+
+    <div
+            class="success-alert"
+            th:if="${param.bookingSuccess}"
+    >
+
+      <i class="fa-solid fa-circle-check"></i>
+
+      Your booking request was submitted successfully.
+
+    </div>
+
+
+    <!-- CANCEL SUCCESS -->
+
+    <div
+            class="success-alert"
+            th:if="${param.bookingCancelled}"
+    >
+
+      <i class="fa-solid fa-circle-check"></i>
+
+      Booking cancelled successfully.
+
+    </div>
+
+
+    <!-- CANCEL ERROR -->
+
+    <div
+            class="error-alert"
+            th:if="${param.cancelError}"
+    >
+
+      <i class="fa-solid fa-circle-exclamation"></i>
+
+      This booking could not be cancelled.
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- STAT CARDS -->
+    <!-- ================================================= -->
+
+    <div class="stats-grid">
+
+
+      <!-- TOTAL -->
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Total Bookings
+          </p>
+
+          <strong
+                  th:text="${totalBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon total">
+
+          <i class="fa-regular fa-calendar"></i>
+
+        </div>
+
+      </div>
+
+
+      <!-- PENDING -->
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Pending
+          </p>
+
+          <strong
+                  th:text="${pendingBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon pending">
+
+          <i class="fa-regular fa-clock"></i>
+
+        </div>
+
+      </div>
+
+
+      <!-- APPROVED -->
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Approved
+          </p>
+
+          <strong
+                  th:text="${approvedBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon approved">
+
+          <i class="fa-solid fa-check"></i>
+
+        </div>
+
+      </div>
+
+
+      <!-- REJECTED -->
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Rejected
+          </p>
+
+          <strong
+                  th:text="${rejectedBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon rejected">
+
+          <i class="fa-solid fa-xmark"></i>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- MY BOOKINGS -->
+    <!-- ================================================= -->
+
+    <section class="bookings-section">
+
+      <div class="section-header">
+
+        <div>
+
+          <h3>
+            My Bookings
+          </h3>
+
+          <p>
+            View and manage your facility booking requests.
+          </p>
+
+        </div>
+
+
+        <div class="booking-filter">
+
+          <select id="bookingStatusFilter">
+
+            <option value="ALL">
+              All Statuses
+            </option>
+
+            <option value="PENDING">
+              Pending
+            </option>
+
+            <option value="APPROVED">
+              Approved
+            </option>
+
+            <option value="REJECTED">
+              Rejected
+            </option>
+
+            <option value="CANCELLED">
+              Cancelled
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <!-- EMPTY STATE -->
+
+      <div
+              class="empty-state"
+              th:if="${#lists.isEmpty(bookings)}"
+      >
+
+        <div class="empty-icon">
+
+          <i class="fa-regular fa-calendar-xmark"></i>
+
+        </div>
+
+        <h3>
+          No bookings yet
+        </h3>
+
+        <p>
+          Create your first facility booking request.
+        </p>
+
+        <button
+                type="button"
+                class="new-booking-btn empty-booking-btn"
+                id="openBookingModalEmpty"
+        >
+
+          <i class="fa-solid fa-plus"></i>
+
+          New Booking
+
+        </button>
+
+      </div>
+
+
+      <!-- TABLE -->
+
+      <div
+              class="table-wrapper"
+              th:unless="${#lists.isEmpty(bookings)}"
+      >
+
+        <table class="booking-table">
+
+          <thead>
+
+          <tr>
+
+            <th>
+              Room
+            </th>
+
+            <th>
+              Date & Time
+            </th>
+
+            <th>
+              Attendees
+            </th>
+
+            <th>
+              Event
+            </th>
+
+            <th>
+              Description
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Action
+            </th>
+
+          </tr>
+
+          </thead>
+
+
+          <tbody>
+
+          <tr
+                  th:each="booking : ${bookings}"
+                  th:attr="data-status=${booking.status}"
+          >
+
+
+            <!-- ROOM -->
+
+            <td>
+
+              <div class="room-cell">
+
+                <i class="fa-solid fa-location-dot"></i>
+
+                <div>
+
+                  <strong
+                          th:text="${booking.room}"
+                  >
+                    Engineering Hall A101
+                  </strong>
+
+                  <span
+                          th:text="${booking.department}"
+                  >
+                                        Computer Science
+                                    </span>
+
+                </div>
+
+              </div>
+
+            </td>
+
+
+            <!-- DATE -->
+
+            <td>
+
+              <strong
+                      th:text="${booking.date}"
+              >
+                2026-08-20
+              </strong>
+
+              <span class="table-subtext">
+
+                                <span
+                                        th:text="${booking.startTime}"
+                                >
+                                    10:00
+                                </span>
+
+                                -
+
+                                <span
+                                        th:text="${booking.endTime}"
+                                >
+                                    12:00
+                                </span>
+
+                            </span>
+
+            </td>
+
+
+            <!-- ATTENDEES -->
+
+            <td>
+
+              <i class="fa-solid fa-users table-icon"></i>
+
+              <span
+                      th:text="${booking.numberOfAttendees}"
+              >
+                                50
+                            </span>
+
+            </td>
+
+
+            <!-- EVENT TYPE -->
+
+            <td>
+
+                            <span
+                                    th:text="${booking.eventType}"
+                            >
+                                Workshop
+                            </span>
+
+            </td>
+
+
+            <!-- DESCRIPTION -->
+
+            <td>
+
+                            <span
+                                    class="booking-description"
+                                    th:text="${booking.description != null && !booking.description.isBlank()
+                                    ? booking.description
+                                    : 'No description'}"
+                            >
+                                Event Description
+                            </span>
+
+            </td>
+
+
+            <!-- STATUS -->
+
+            <td>
+
+                            <span
+                                    class="status-badge"
+                                    th:classappend="${#strings.toLowerCase(booking.status)}"
+                                    th:text="${#strings.capitalize(#strings.toLowerCase(booking.status))}"
+                            >
+                                PENDING
+                            </span>
+
+            </td>
+
+
+            <!-- ACTION -->
+
+            <td>
+
+
+              <!-- CANCEL PENDING OR UPCOMING APPROVED -->
+
+              <form
+                      th:if="${(booking.status == 'PENDING' or booking.status == 'APPROVED')
+                               and (booking.date == null or !booking.date.isBefore(T(java.time.LocalDate).now()))}"
+                      th:action="@{'/booking/' + ${booking.id} + '/cancel'}"
+                      method="post"
+                      onsubmit="return confirm('Are you sure you want to cancel this booking?');"
+              >
+
+                <button
+                        type="submit"
+                        class="cancel-booking-button"
+                >
+
+                  <i class="fa-solid fa-xmark"></i>
+
+                  Cancel
+
+                </button>
+
+              </form>
+
+
+              <!-- NO ACTION -->
+
+              <span
+                      th:unless="${(booking.status == 'PENDING' or booking.status == 'APPROVED')
+                                   and (booking.date == null or !booking.date.isBefore(T(java.time.LocalDate).now()))}"
+                      class="completed-action"
+              >
+                                —
+                            </span>
+
+            </td>
+
+          </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- SEARCH -->
+  <!-- ===================================================== -->
+
+  <section
+          id="searchView"
+          class="tab-view"
+  >
+
+    <div class="page-title">
+
+      <h2>
+        Search Facilities
+      </h2>
+
+      <p>
+        Search available campus rooms and facilities.
+      </p>
+
+    </div>
+
+
+    <div class="search-panel">
+
+      <div class="search-input-wrapper">
+
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+                id="facilitySearch"
+                type="text"
+                placeholder="Search by room name, type, or equipment..."
+        >
+
+      </div>
+
+      <select id="facilityTypeFilter" class="facility-filter">
+        <option value="">All types</option>
+        <option th:each="t : ${#sets.toSet(rooms.![type])}"
+                th:value="${t}" th:text="${t}">Type</option>
+      </select>
+
+      <select id="facilityCapacityFilter" class="facility-filter">
+        <option value="0">Any capacity</option>
+        <option value="20">20+ people</option>
+        <option value="50">50+ people</option>
+        <option value="100">100+ people</option>
+        <option value="300">300+ people</option>
+      </select>
+
+    </div>
+
+
+    <p id="facilityNoResults" class="facility-no-results" style="display:none;color:#7b8392;padding:16px;">
+      No facilities match your filters.
+    </p>
+
+
+    <div class="facility-search-grid">
+
+
+      <article class="facility-result" th:each="r : ${rooms}"
+               th:attr="data-type=${r.type},data-capacity=${r.capacity}">
+
+        <div class="facility-image"
+             th:classappend="${#strings.toLowerCase(#strings.replace(r.type,' ','-'))}">
+          <i class="fa-solid fa-building"></i>
+        </div>
+
+        <div class="facility-info">
+
+          <div class="facility-title-row">
+            <h3 th:text="${r.name}">Room name</h3>
+            <span class="available">Available</span>
+          </div>
+
+          <p th:text="${r.type + ' • Capacity ' + r.capacity + (r.building != null ? ' • ' + r.building : '')}">
+            Type • Capacity 0
+          </p>
+
+          <div class="facility-meta">
+            <span th:each="item : ${#strings.arraySplit(r.equipment != null ? r.equipment : '', ',')}"
+                  th:if="${not #strings.isEmpty(#strings.trim(item))}"
+                  th:text="${#strings.trim(item)}">Equipment</span>
+          </div>
+
+          <button
+                  type="button"
+                  class="book-facility-btn open-booking-from-search"
+                  th:attr="data-room=${r.name}"
+          >
+            Book Facility
+          </button>
+
+        </div>
+
+      </article>
+
+    </div>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- CALENDAR -->
+  <!-- ===================================================== -->
+
+  <section
+          id="calendarView"
+          class="tab-view"
+  >
+
+    <div class="calendar-header">
+      <div>
+        <h2>Weekly Calendar</h2>
+        <p>Your approved facility bookings for the week.</p>
+      </div>
+    </div>
+
+    <div class="cal-toolbar">
+      <span class="cal-range" id="calendarRangeLabel">This week</span>
+      <div class="cal-nav">
+        <button type="button" id="calendarPrev" aria-label="Previous week">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button type="button" id="calendarNext" aria-label="Next week">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="calendarGrid"></div>
+
+  </section>
+
+</main>
+
+
+<!-- ========================================================= -->
+<!-- NEW BOOKING MODAL -->
+<!-- ========================================================= -->
+
+<div
+        class="modal-overlay"
+        id="bookingModal"
+>
+
+  <div class="booking-modal">
+
+
+    <!-- HEADER -->
+
+    <div class="modal-header">
+
+      <div>
+
+        <h2>
+          New Booking Request
+        </h2>
+
+        <p>
+          Fill in all required details for your event.
+        </p>
+
+      </div>
+
+
+      <button
+              type="button"
+              class="modal-close"
+              id="closeBookingModal"
+      >
+
+        <i class="fa-solid fa-xmark"></i>
+
+      </button>
+
+    </div>
+
+
+    <!-- FORM -->
+
+    <form
+            th:action="@{/booking}"
+            th:object="${booking}"
+            method="post"
+            class="js-validate" data-form="booking"
+    >
+
+      <div class="modal-body">
+
+
+        <!-- ================================================= -->
+        <!-- BASIC INFO -->
+        <!-- ================================================= -->
+
+        <h3>
+          Basic Information
+        </h3>
+
+
+        <!-- ROOM -->
+
+        <div class="modal-field full">
+
+          <label for="room">
+            Room *
+          </label>
+
+
+          <select
+                  id="room"
+                  th:field="*{room}"
+                  data-validate data-required
+          >
+
+            <option value="">
+              Select a room
+            </option>
+
+            <option th:each="r : ${rooms}"
+                    th:value="${r.name}"
+                    th:attr="data-capacity=${r.capacity}"
+                    th:text="${r.name + ' - ' + r.type + ' (Capacity: ' + r.capacity + ')'}">
+              Room name - Type (Capacity: 0)
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="modal-grid">
+
+
+          <!-- EVENT TYPE -->
+
+          <div class="modal-field">
+
+            <label for="eventType">
+              Event Type *
+            </label>
+
+            <select
+                    id="eventType"
+                    th:field="*{eventType}"
+                    data-validate data-required
+            >
+
+              <option value="">
+                Select event type
+              </option>
+
+              <option value="Academic">
+                Academic
+              </option>
+
+              <option value="Workshop">
+                Workshop
+              </option>
+
+              <option value="Seminar">
+                Seminar
+              </option>
+
+              <option value="Conference">
+                Conference
+              </option>
+
+              <option value="Club Meeting">
+                Club Meeting
+              </option>
+
+              <option value="Sports Event">
+                Sports Event
+              </option>
+
+              <option value="Cultural Event">
+                Cultural Event
+              </option>
+
+              <option value="Examination">
+                Examination
+              </option>
+
+              <option value="Other">
+                Other
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- DEPARTMENT -->
+
+          <div class="modal-field">
+
+            <label for="department">
+              Department *
+            </label>
+
+            <select
+                    id="department"
+                    th:field="*{department}"
+                    data-validate data-required
+            >
+
+              <option value="">
+                Select department
+              </option>
+
+              <option value="Computer Science">
+                Computer Science
+              </option>
+
+              <option value="Electrical Engineering">
+                Electrical Engineering
+              </option>
+
+              <option value="Mechanical Engineering">
+                Mechanical Engineering
+              </option>
+
+              <option value="Civil Engineering">
+                Civil Engineering
+              </option>
+
+              <option value="Business Administration">
+                Business Administration
+              </option>
+
+              <option value="Mathematics">
+                Mathematics
+              </option>
+
+              <option value="Physics">
+                Physics
+              </option>
+
+              <option value="Chemistry">
+                Chemistry
+              </option>
+
+              <option value="Student Affairs">
+                Student Affairs
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- PRIORITY -->
+
+          <div class="modal-field">
+
+            <label for="priority">
+              Priority Level *
+            </label>
+
+            <select
+                    id="priority"
+                    th:field="*{priority}"
+                    data-validate data-required
+            >
+
+              <option value="">
+                Select priority
+              </option>
+
+              <option value="Low">
+                Low - Regular Event
+              </option>
+
+              <option value="Medium">
+                Medium - Important Event
+              </option>
+
+              <option value="High">
+                High - Critical Event
+              </option>
+
+              <option value="Critical">
+                Critical - VIP/Emergency
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- ATTENDEES -->
+
+          <div class="modal-field">
+
+            <label for="numberOfAttendees">
+              Number of Attendees *
+            </label>
+
+            <input
+                    id="numberOfAttendees"
+                    type="number"
+                    min="1"
+                    th:field="*{numberOfAttendees}"
+                    placeholder="Enter attendees"
+                    data-validate data-required data-type="number" data-min="1"
+            >
+
+            <small id="capacityText">
+              Select a room to see capacity
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- DATE -->
+        <!-- ================================================= -->
+
+        <h3>
+          Date & Time
+        </h3>
+
+
+        <div class="modal-grid">
+
+
+          <!-- DATE -->
+
+          <div class="modal-field">
+
+            <label for="bookingDate">
+              Date *
+            </label>
+
+            <input
+                    id="bookingDate"
+                    type="date"
+                    th:field="*{date}"
+                    data-validate data-required
+            >
+
+          </div>
+
+
+          <!-- RECURRING -->
+
+          <div class="recurring-row">
+
+            <input
+                    id="recurring"
+                    type="checkbox"
+                    th:field="*{recurring}"
+            >
+
+            <label for="recurring">
+
+              <i class="fa-solid fa-repeat"></i>
+
+              Recurring Event
+
+            </label>
+
+          </div>
+
+
+          <!-- START -->
+
+          <div class="modal-field">
+
+            <label for="startTime">
+              Start Time *
+            </label>
+
+            <input
+                    id="startTime"
+                    type="time"
+                    th:field="*{startTime}"
+                    data-validate data-required
+            >
+
+          </div>
+
+
+          <!-- END -->
+
+          <div class="modal-field">
+
+            <label for="endTime">
+              End Time *
+            </label>
+
+            <input
+                    id="endTime"
+                    type="time"
+                    th:field="*{endTime}"
+                    data-validate data-required
+            >
+
+          </div>
+
+
+          <!-- SETUP -->
+
+          <div class="modal-field">
+
+            <label for="setupTime">
+              Setup Time (minutes)
+            </label>
+
+            <input
+                    id="setupTime"
+                    type="number"
+                    min="0"
+                    th:field="*{setupTime}"
+                    placeholder="0"
+            >
+
+          </div>
+
+
+          <!-- CLEANUP -->
+
+          <div class="modal-field">
+
+            <label for="cleanupTime">
+              Cleanup Time (minutes)
+            </label>
+
+            <input
+                    id="cleanupTime"
+                    type="number"
+                    min="0"
+                    th:field="*{cleanupTime}"
+                    placeholder="0"
+            >
+
+          </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- EQUIPMENT -->
+        <!-- ================================================= -->
+
+        <h3>
+          Equipment Needed
+        </h3>
+
+
+        <div class="equipment-grid">
+
+
+          <label>
+
+            <input
+                    type="checkbox"
+                    class="equipment-check"
+                    value="Projector"
+            >
+
+            Projector
+
+          </label>
+
+
+          <label>
+
+            <input
+                    type="checkbox"
+                    class="equipment-check"
+                    value="Whiteboard"
+            >
+
+            Whiteboard
+
+          </label>
+
+
+          <label>
+
+            <input
+                    type="checkbox"
+                    class="equipment-check"
+                    value="Audio System"
+            >
+
+            Audio System
+
+          </label>
+
+
+          <label>
+
+            <input
+                    type="checkbox"
+                    class="equipment-check"
+                    value="Podium"
+            >
+
+            Podium
+
+          </label>
+
+
+          <label>
+
+            <input
+                    type="checkbox"
+                    class="equipment-check"
+                    value="WiFi"
+            >
+
+            WiFi
+
+          </label>
+
+        </div>
+
+
+        <input
+                id="equipmentNeeded"
+                type="hidden"
+                th:field="*{equipmentNeeded}"
+        >
+
+
+        <!-- ================================================= -->
+        <!-- DESCRIPTION -->
+        <!-- ================================================= -->
+
+        <h3>
+          Event Description
+        </h3>
+
+
+        <div class="modal-field full">
+
+                    <textarea
+                            id="description"
+                            th:field="*{description}"
+                            rows="5"
+                            placeholder="Provide detailed information about your event..."
+                    ></textarea>
+
+        </div>
+
+      </div>
+
+
+      <!-- FOOTER -->
+
+      <div class="modal-footer">
+
+        <button
+                type="button"
+                class="cancel-modal-btn"
+                id="cancelBookingModal"
+        >
+          Cancel
+        </button>
+
+
+        <button
+                type="submit"
+                class="submit-booking-btn"
+        >
+          Submit Request
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script>
+
+  document.addEventListener(
+          "DOMContentLoaded",
+          function () {
+
+
+            // =================================================
+            // TABS
+            // =================================================
+
+            const tabs =
+                    document.querySelectorAll(
+                            ".nav-tab"
+                    );
+
+            const views =
+                    document.querySelectorAll(
+                            ".tab-view"
+                    );
+
+
+            tabs.forEach(function (tab) {
+
+              tab.addEventListener(
+                      "click",
+                      function () {
+
+                        const targetId =
+                                tab.getAttribute(
+                                        "data-tab"
+                                );
+
+
+                        tabs.forEach(function (item) {
+
+                          item.classList.remove(
+                                  "active"
+                          );
+
+                        });
+
+
+                        views.forEach(function (view) {
+
+                          view.classList.remove(
+                                  "active-view"
+                          );
+
+                        });
+
+
+                        tab.classList.add(
+                                "active"
+                        );
+
+
+                        const target =
+                                document.getElementById(
+                                        targetId
+                                );
+
+
+                        if (target) {
+
+                          target.classList.add(
+                                  "active-view"
+                          );
+
+                        }
+
+                      }
+              );
+
+            });
+
+
+            // =================================================
+            // MODAL
+            // =================================================
+
+            const modal =
+                    document.getElementById(
+                            "bookingModal"
+                    );
+
+            const openButton =
+                    document.getElementById(
+                            "openBookingModal"
+                    );
+
+            const emptyOpenButton =
+                    document.getElementById(
+                            "openBookingModalEmpty"
+                    );
+
+            const closeButton =
+                    document.getElementById(
+                            "closeBookingModal"
+                    );
+
+            const cancelButton =
+                    document.getElementById(
+                            "cancelBookingModal"
+                    );
+
+
+            function openModal() {
+
+              if (!modal) {
+                return;
+              }
+
+              modal.classList.add(
+                      "show"
+              );
+
+              document.body.style.overflow =
+                      "hidden";
+
+            }
+
+
+            function closeModal() {
+
+              if (!modal) {
+                return;
+              }
+
+              modal.classList.remove(
+                      "show"
+              );
+
+              document.body.style.overflow =
+                      "";
+
+            }
+
+
+            if (openButton) {
+
+              openButton.addEventListener(
+                      "click",
+                      openModal
+              );
+
+            }
+
+
+            if (emptyOpenButton) {
+
+              emptyOpenButton.addEventListener(
+                      "click",
+                      openModal
+              );
+
+            }
+
+
+            if (closeButton) {
+
+              closeButton.addEventListener(
+                      "click",
+                      closeModal
+              );
+
+            }
+
+
+            if (cancelButton) {
+
+              cancelButton.addEventListener(
+                      "click",
+                      closeModal
+              );
+
+            }
+
+
+            if (modal) {
+
+              modal.addEventListener(
+                      "click",
+                      function (event) {
+
+                        if (
+                                event.target === modal
+                        ) {
+
+                          closeModal();
+
+                        }
+
+                      }
+              );
+
+            }
+
+
+            document.addEventListener(
+                    "keydown",
+                    function (event) {
+
+                      if (
+                              event.key === "Escape"
+                      ) {
+
+                        closeModal();
+
+                      }
+
+                    }
+            );
+
+
+            // =================================================
+            // SEARCH FACILITY BOOKING BUTTONS
+            // =================================================
+
+            const searchButtons =
+                    document.querySelectorAll(
+                            ".open-booking-from-search"
+                    );
+
+
+            searchButtons.forEach(
+                    function (button) {
+
+                      button.addEventListener(
+                              "click",
+                              function () {
+
+                                const room =
+                                        button.getAttribute(
+                                                "data-room"
+                                        );
+
+
+                                const roomSelect =
+                                        document.getElementById(
+                                                "room"
+                                        );
+
+
+                                if (
+                                        room &&
+                                        roomSelect
+                                ) {
+
+                                  roomSelect.value =
+                                          room;
+
+
+                                  roomSelect.dispatchEvent(
+                                          new Event(
+                                                  "change"
+                                          )
+                                  );
+
+                                }
+
+
+                                openModal();
+
+                              }
+                      );
+
+                    }
+            );
+
+
+            // =================================================
+            // NOTIFICATIONS
+            // =================================================
+
+            const notificationButton =
+                    document.getElementById(
+                            "notificationButton"
+                    );
+
+            const notificationDropdown =
+                    document.getElementById(
+                            "notificationDropdown"
+                    );
+
+
+            if (
+                    notificationButton &&
+                    notificationDropdown
+            ) {
+
+              notificationButton.addEventListener(
+                      "click",
+                      function (event) {
+
+                        event.stopPropagation();
+
+
+                        notificationDropdown
+                                .classList
+                                .toggle(
+                                        "show"
+                                );
+
+                      }
+              );
+
+
+              notificationDropdown.addEventListener(
+                      "click",
+                      function (event) {
+
+                        event.stopPropagation();
+
+                      }
+              );
+
+
+              document.addEventListener(
+                      "click",
+                      function () {
+
+                        notificationDropdown
+                                .classList
+                                .remove(
+                                        "show"
+                                );
+
+                      }
+              );
+
+            }
+
+
+            // =================================================
+            // BOOKING FILTER
+            // =================================================
+
+            const bookingFilter =
+                    document.getElementById(
+                            "bookingStatusFilter"
+                    );
+
+
+            if (bookingFilter) {
+
+              bookingFilter.addEventListener(
+                      "change",
+                      function () {
+
+                        const selectedStatus =
+                                bookingFilter.value;
+
+
+                        const rows =
+                                document.querySelectorAll(
+                                        ".booking-table tbody tr"
+                                );
+
+
+                        rows.forEach(
+                                function (row) {
+
+                                  const rowStatus =
+                                          row.getAttribute(
+                                                  "data-status"
+                                          );
+
+
+                                  if (
+                                          selectedStatus ===
+                                          "ALL" ||
+                                          selectedStatus ===
+                                          rowStatus
+                                  ) {
+
+                                    row.style.display =
+                                            "";
+
+                                  } else {
+
+                                    row.style.display =
+                                            "none";
+
+                                  }
+
+                                }
+                        );
+
+                      }
+              );
+
+            }
+
+
+            // =================================================
+            // FACILITY SEARCH + FILTERS
+            // =================================================
+
+            const searchInput =
+                    document.getElementById("facilitySearch");
+            const typeFilter =
+                    document.getElementById("facilityTypeFilter");
+            const capacityFilter =
+                    document.getElementById("facilityCapacityFilter");
+            const noResults =
+                    document.getElementById("facilityNoResults");
+
+            function applyFacilityFilters() {
+
+              const value = searchInput
+                      ? searchInput.value.toLowerCase().trim() : "";
+              const type = typeFilter ? typeFilter.value : "";
+              const minCap = capacityFilter
+                      ? parseInt(capacityFilter.value, 10) || 0 : 0;
+
+              let visible = 0;
+
+              document.querySelectorAll(".facility-result").forEach(
+                      function (card) {
+                        const matchesText =
+                                card.innerText.toLowerCase().includes(value);
+                        const matchesType =
+                                !type || card.getAttribute("data-type") === type;
+                        const cap = parseInt(
+                                card.getAttribute("data-capacity"), 10) || 0;
+                        const matchesCap = cap >= minCap;
+
+                        const show = matchesText && matchesType && matchesCap;
+                        card.style.display = show ? "" : "none";
+                        if (show) visible++;
+                      }
+              );
+
+              if (noResults) {
+                noResults.style.display = visible === 0 ? "" : "none";
+              }
+            }
+
+            if (searchInput) {
+              searchInput.addEventListener("input", applyFacilityFilters);
+            }
+            if (typeFilter) {
+              typeFilter.addEventListener("change", applyFacilityFilters);
+            }
+            if (capacityFilter) {
+              capacityFilter.addEventListener("change", applyFacilityFilters);
+            }
+
+
+            // =================================================
+            // ROOM CAPACITY
+            // =================================================
+
+            const roomSelect =
+                    document.getElementById(
+                            "room"
+                    );
+
+            const capacityText =
+                    document.getElementById(
+                            "capacityText"
+                    );
+
+            const attendeesInput =
+                    document.getElementById(
+                            "numberOfAttendees"
+                    );
+
+
+            function updateCapacity() {
+
+              if (
+                      !roomSelect ||
+                      !capacityText ||
+                      !attendeesInput
+              ) {
+
+                return;
+
+              }
+
+
+              const selectedOption =
+                      roomSelect.options[
+                              roomSelect.selectedIndex
+                              ];
+
+
+              const capacity =
+                      selectedOption
+                              ? parseInt(
+                                      selectedOption.getAttribute(
+                                              "data-capacity"
+                                      ),
+                                      10
+                              )
+                              : null;
+
+
+              if (capacity) {
+
+                capacityText.textContent =
+                        "Room capacity: " +
+                        capacity +
+                        " people";
+
+
+                attendeesInput.max =
+                        capacity;
+
+              } else {
+
+                capacityText.textContent =
+                        "Select a room to see capacity";
+
+
+                attendeesInput.removeAttribute(
+                        "max"
+                );
+
+              }
+
+            }
+
+
+            if (roomSelect) {
+
+              roomSelect.addEventListener(
+                      "change",
+                      updateCapacity
+              );
+
+            }
+
+
+            updateCapacity();
+
+
+            // =================================================
+            // EQUIPMENT
+            // =================================================
+
+            const equipmentChecks =
+                    document.querySelectorAll(
+                            ".equipment-check"
+                    );
+
+            const equipmentField =
+                    document.getElementById(
+                            "equipmentNeeded"
+                    );
+
+
+            equipmentChecks.forEach(
+                    function (checkbox) {
+
+                      checkbox.addEventListener(
+                              "change",
+                              function () {
+
+                                const selected = [];
+
+
+                                equipmentChecks.forEach(
+                                        function (item) {
+
+                                          if (
+                                                  item.checked
+                                          ) {
+
+                                            selected.push(
+                                                    item.value
+                                            );
+
+                                          }
+
+                                        }
+                                );
+
+
+                                if (
+                                        equipmentField
+                                ) {
+
+                                  equipmentField.value =
+                                          selected.join(
+                                                  ", "
+                                          );
+
+                                }
+
+                              }
+                      );
+
+                    }
+            );
+
+
+            // =================================================
+            // PAST DATE PREVENTION
+            // =================================================
+
+            const bookingDate =
+                    document.getElementById(
+                            "bookingDate"
+                    );
+
+
+            if (bookingDate) {
+
+              const today =
+                      new Date();
+
+
+              const year =
+                      today.getFullYear();
+
+
+              const month =
+                      String(
+                              today.getMonth() +
+                              1
+                      ).padStart(
+                              2,
+                              "0"
+                      );
+
+
+              const day =
+                      String(
+                              today.getDate()
+                      ).padStart(
+                              2,
+                              "0"
+                      );
+
+
+              bookingDate.min =
+                      year +
+                      "-" +
+                      month +
+                      "-" +
+                      day;
+
+            }
+
+          }
+  );
+
+</script>
+
+<script th:inline="javascript">
+  window.CALENDAR_EVENTS = /*[[${calendarEvents}]]*/ [];
+</script>
+<script th:src="@{/js/calendar.js}"></script>
+
+<script th:src="@{/js/form-validate.js}"></script>
+</body>
+</html>

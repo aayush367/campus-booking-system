@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Booking | Campus Booking System</title>
+  <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" th:href="@{/css/app-theme.css}">
+  <style>
+    .standalone-wrap { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+    .standalone-card { background: #fff; border: 1px solid #e2e6ee; border-radius: 12px; }
+    .standalone-card .modal-header,
+    .standalone-card .modal-body,
+    .standalone-card .modal-footer { position: static; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px;
+                 color: #2440a0; text-decoration: none; font-weight: 600; }
+  </style>
+  <link rel="stylesheet" th:href="@{/css/form-validate.css}">
+</head>
+
+<body>
+
+<div class="standalone-wrap">
+
+  <a th:href="@{/dashboard}" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+  </a>
+
+  <div class="standalone-card">
+
+    <div class="modal-header">
+      <div>
+        <h2>New Booking Request</h2>
+        <p>Fill in all required details for your event.</p>
+      </div>
+    </div>
+
+    <div class="error-alert" th:if="${error}" style="margin: 16px 24px 0;">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span th:text="${error}">Error</span>
+    </div>
+
+    <form th:action="@{/booking}" th:object="${booking}" method="post" class="js-validate" data-form="booking">
+
+      <div class="modal-body">
+
+        <h3>Basic Information</h3>
+
+        <div class="modal-field full">
+          <label for="room">Room *</label>
+          <select id="room" th:field="*{room}" data-validate data-required>
+            <option value="">Select a room</option>
+            <option th:each="r : ${rooms}"
+                    th:value="${r.name}"
+                    th:attr="data-capacity=${r.capacity}"
+                    th:text="${r.name + ' - ' + r.type + ' (Capacity: ' + r.capacity + ')'}">
+              Room
+            </option>
+          </select>
+        </div>
+
+        <div class="modal-grid">
+
+          <div class="modal-field">
+            <label for="eventType">Event Type *</label>
+            <select id="eventType" th:field="*{eventType}" data-validate data-required>
+              <option value="">Select event type</option>
+              <option value="Academic">Academic</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Seminar">Seminar</option>
+              <option value="Conference">Conference</option>
+              <option value="Club Meeting">Club Meeting</option>
+              <option value="Sports Event">Sports Event</option>
+              <option value="Cultural Event">Cultural Event</option>
+              <option value="Examination">Examination</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="modal-field">
+            <label for="department">Department *</label>
+            <select id="department" th:field="*{department}" data-validate data-required>
+              <option value="">Select department</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Electrical Engineering">Electrical Engineering</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+              <option value="Business Administration">Business Administration</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Student Affairs">Student Affairs</option>
+            </select>
+          </div>
+
+          <div class="modal-field">
+            <label for="priority">Priority Level *</label>
+            <select id="priority" th:field="*{priority}" data-validate data-required>
+              <option value="">Select priority</option>
+              <option value="Low">Low - Regular Event</option>
+              <option value="Medium">Medium - Important Event</option>
+              <option value="High">High - Critical Event</option>
+              <option value="Critical">Critical - VIP/Emergency</option>
+            </select>
+          </div>
+
+          <div class="modal-field">
+            <label for="numberOfAttendees">Number of Attendees *</label>
+            <input id="numberOfAttendees" type="number" min="1"
+                   th:field="*{numberOfAttendees}" placeholder="Enter attendees" data-validate data-required data-type="number" data-min="1">
+            <small id="capacityText">Select a room to see capacity</small>
+          </div>
+
+        </div>
+
+        <h3>Date &amp; Time</h3>
+
+        <div class="modal-grid">
+
+          <div class="modal-field">
+            <label for="bookingDate">Date *</label>
+            <input id="bookingDate" type="date" th:field="*{date}" data-validate data-required>
+          </div>
+
+          <div class="recurring-row">
+            <input id="recurring" type="checkbox" th:field="*{recurring}">
+            <label for="recurring"><i class="fa-solid fa-repeat"></i> Recurring Event</label>
+          </div>
+
+          <div class="modal-field">
+            <label for="startTime">Start Time *</label>
+            <input id="startTime" type="time" th:field="*{startTime}" data-validate data-required>
+          </div>
+
+          <div class="modal-field">
+            <label for="endTime">End Time *</label>
+            <input id="endTime" type="time" th:field="*{endTime}" data-validate data-required>
+          </div>
+
+          <div class="modal-field">
+            <label for="setupTime">Setup Time (minutes)</label>
+            <input id="setupTime" type="number" min="0" th:field="*{setupTime}" placeholder="0">
+          </div>
+
+          <div class="modal-field">
+            <label for="cleanupTime">Cleanup Time (minutes)</label>
+            <input id="cleanupTime" type="number" min="0" th:field="*{cleanupTime}" placeholder="0">
+          </div>
+
+        </div>
+
+        <h3>Equipment Needed</h3>
+
+        <div class="equipment-grid">
+          <label><input type="checkbox" class="equipment-check" value="Projector"> Projector</label>
+          <label><input type="checkbox" class="equipment-check" value="Whiteboard"> Whiteboard</label>
+          <label><input type="checkbox" class="equipment-check" value="Audio System"> Audio System</label>
+          <label><input type="checkbox" class="equipment-check" value="Podium"> Podium</label>
+          <label><input type="checkbox" class="equipment-check" value="WiFi"> WiFi</label>
+        </div>
+
+        <input id="equipmentNeeded" type="hidden" th:field="*{equipmentNeeded}">
+
+        <h3>Event Description</h3>
+
+        <div class="modal-field full">
+          <textarea id="description" th:field="*{description}" rows="5"
+                    placeholder="Provide detailed information about your event..."></textarea>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <a th:href="@{/dashboard}" class="cancel-modal-btn">Cancel</a>
+        <button type="submit" class="submit-booking-btn">Submit Request</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    var roomSelect = document.getElementById("room");
+    var capacityText = document.getElementById("capacityText");
+    var attendeesInput = document.getElementById("numberOfAttendees");
+
+    function updateCapacity() {
+      if (!roomSelect || !capacityText || !attendeesInput) return;
+      var opt = roomSelect.options[roomSelect.selectedIndex];
+      var cap = opt ? parseInt(opt.getAttribute("data-capacity"), 10) : null;
+      if (cap) {
+        capacityText.textContent = "Room capacity: " + cap + " people";
+        attendeesInput.max = cap;
+      } else {
+        capacityText.textContent = "Select a room to see capacity";
+        attendeesInput.removeAttribute("max");
+      }
+    }
+    if (roomSelect) roomSelect.addEventListener("change", updateCapacity);
+    updateCapacity();
+
+    var checks = document.querySelectorAll(".equipment-check");
+    var field = document.getElementById("equipmentNeeded");
+    checks.forEach(function (c) {
+      c.addEventListener("change", function () {
+        var picked = [];
+        checks.forEach(function (i) { if (i.checked) picked.push(i.value); });
+        if (field) field.value = picked.join(", ");
+      });
+    });
+
+    var d = document.getElementById("bookingDate");
+    if (d) {
+      var t = new Date();
+      d.min = t.getFullYear() + "-" +
+        String(t.getMonth() + 1).padStart(2, "0") + "-" +
+        String(t.getDate()).padStart(2, "0");
+    }
+  });
+</script>
+
+<script th:src="@{/js/form-validate.js}"></script>
+</body>
+</html>

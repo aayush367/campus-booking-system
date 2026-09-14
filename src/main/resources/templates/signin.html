@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Sign In | KOI University</title>
+
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" th:href="@{/css/signin.css}">
+  <link rel="stylesheet" th:href="@{/css/form-validate.css}">
+
+  <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+</head>
+
+<body class="signin-body">
+
+<div class="top-bar">
+  <div class="container top-bar-content">
+
+    <div class="top-links">
+      <a href="#">Campus Map</a>
+      <a href="#">Directory</a>
+      <a href="#">Library</a>
+      <a href="#">IT Services</a>
+    </div>
+
+    <div class="portal-links">
+      <a href="#">Student Portal</a>
+      <span>|</span>
+      <a href="#">Staff Portal</a>
+    </div>
+
+  </div>
+</div>
+
+<header class="main-header">
+
+  <div class="container navigation">
+
+    <a th:href="@{/}" class="brand">
+
+      <div class="brand-logo">KOI</div>
+
+      <div class="brand-text">
+        <h1>KOI University</h1>
+        <p>Facility Booking System</p>
+      </div>
+
+    </a>
+
+    <a th:href="@{/}" class="back-home">
+      <i class="fa-solid fa-arrow-left"></i>
+      Back to Home
+    </a>
+
+  </div>
+
+</header>
+
+<main class="signin-main">
+
+  <section class="signin-card">
+
+    <h2>Sign In</h2>
+
+    <p class="signin-subtitle">
+      Access the facility booking system
+    </p>
+
+    <div
+            class="signin-success"
+            th:if="${param.registered}"
+    >
+      Account created successfully. You can now sign in.
+    </div>
+
+    <div
+            class="signin-error"
+            th:if="${error}"
+            th:text="${error}"
+    >
+      Invalid email or password.
+    </div>
+
+    <form
+            th:action="@{/signin}"
+            method="post"
+            class="js-validate"
+    >
+
+      <div class="form-group">
+        <label for="email">Email</label>
+
+        <input
+                id="email"
+                name="email"
+                type="text"
+                placeholder="your.name@university.edu"
+                data-validate data-required data-type="email" data-label="Email"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+
+        <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                data-validate data-required data-label="Password"
+        >
+      </div>
+
+      <button class="signin-button" type="submit">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+        Sign In
+      </button>
+
+    </form>
+
+    <p class="register-message">
+      Don't have an account?
+      <a th:href="@{/register}">Register here</a>
+    </p>
+
+    <div class="quick-login">
+
+      <span>Quick Login (demo accounts)</span>
+
+      <button type="button" class="quick-login-btn"
+              data-email="student@campus.edu" data-password="Student@123">
+        Student Account
+      </button>
+      <button type="button" class="quick-login-btn"
+              data-email="faculty@campus.edu" data-password="Faculty@123">
+        Faculty Account
+      </button>
+      <button type="button" class="quick-login-btn"
+              data-email="admin@campus.edu" data-password="Admin@1234">
+        Admin Account
+      </button>
+
+    </div>
+
+    <a href="#" class="forgot-password">
+      Forgot Password?
+    </a>
+
+  </section>
+
+</main>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var form = document.querySelector("form[action$='/signin'], form[method='post']");
+    document.querySelectorAll(".quick-login-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        if (!form) return;
+        form.querySelector("#email").value = btn.getAttribute("data-email");
+        form.querySelector("#password").value = btn.getAttribute("data-password");
+        form.submit();
+      });
+    });
+  });
+</script>
+
+<footer class="signin-footer">
+  © 2026 KOI University. All rights reserved.
+</footer>
+
+<script th:src="@{/js/form-validate.js}"></script>
+
+</body>
+</html>

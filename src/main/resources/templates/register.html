@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Create Account | KOI University</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/register.css}">
+
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+  <link rel="stylesheet" th:href="@{/css/form-validate.css}">
+</head>
+
+<body class="register-body">
+
+<div class="top-bar">
+
+    <div class="container top-bar-content">
+
+        <div class="top-links">
+            <a href="#">Campus Map</a>
+            <a href="#">Directory</a>
+            <a href="#">Library</a>
+            <a href="#">IT Services</a>
+        </div>
+
+        <div class="portal-links">
+            <a href="#">Student Portal</a>
+            <span>|</span>
+            <a href="#">Staff Portal</a>
+        </div>
+
+    </div>
+
+</div>
+
+
+<header class="main-header">
+
+    <div class="container navigation">
+
+        <a th:href="@{/}" class="brand">
+
+            <div class="brand-logo">
+                KOI
+            </div>
+
+            <div class="brand-text">
+                <h1>KOI University</h1>
+                <p>Facility Booking System</p>
+            </div>
+
+        </a>
+
+
+        <a th:href="@{/}" class="back-home">
+
+            <i class="fa-solid fa-arrow-left"></i>
+
+            Back to Home
+
+        </a>
+
+    </div>
+
+</header>
+
+
+<main class="register-main">
+
+    <section class="register-card">
+
+        <div class="register-card-header">
+
+            <h2>
+                Create Account
+            </h2>
+
+            <p>
+                Register to access the facility booking system
+            </p>
+
+        </div>
+
+
+        <div class="register-card-body">
+
+            <div class="registration-note">
+
+                <strong>
+                    Note:
+                </strong>
+
+                You must use your official university email address.
+
+            </div>
+
+
+            <div
+                    class="registration-error"
+                    th:if="${error}"
+                    th:text="${error}"
+            >
+                Registration error
+            </div>
+
+
+            <form
+                    th:action="@{/register}"
+                    th:object="${user}"
+                    method="post"
+                    class="js-validate" data-form="register"
+            >
+
+
+                <!-- FULL NAME -->
+
+                <div class="form-group full-width">
+
+                    <label for="fullName">
+                        Full Name *
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="fa-regular fa-user"></i>
+
+                        <input
+                                id="fullName"
+                                type="text"
+                                th:field="*{fullName}"
+                                placeholder="John Doe"
+                                data-validate data-required data-label="Full name"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- EMAIL -->
+
+                <div class="form-group full-width">
+
+                    <label for="email">
+                        University Email Address *
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="fa-regular fa-envelope"></i>
+
+                        <input
+                                id="email"
+                                type="text"
+                                th:field="*{email}"
+                                placeholder="john.doe@university.edu"
+                                data-validate data-required data-type="email" data-label="Email"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid">
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="form-group">
+
+                        <label for="password">
+                            Password *
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                            <input
+                                    id="password"
+                                    type="password"
+                                    th:field="*{password}"
+                                    placeholder="Minimum 8 characters"
+                                    data-validate data-required data-minlength="8" data-label="Password"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CONFIRM PASSWORD -->
+
+                    <div class="form-group">
+
+                        <label for="confirmPassword">
+                            Confirm Password *
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                            <input
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    type="password"
+                                    placeholder="Repeat your password"
+                                    data-validate data-required data-match="#password" data-match-message="Password and confirmation do not match." data-label="Confirm password"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PHONE -->
+
+                    <div class="form-group">
+
+                        <label for="phone">
+                            Phone Number
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <i class="fa-solid fa-phone"></i>
+
+                            <input
+                                    id="phone"
+                                    type="tel"
+                                    th:field="*{phone}"
+                                    placeholder="+61 400 000 000"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACCOUNT TYPE -->
+
+                    <div class="form-group">
+
+                        <label for="accountType">
+                            Account Type *
+                        </label>
+
+                        <select
+                                id="accountType"
+                                th:field="*{accountType}"
+                                data-validate data-required data-label="Account type"
+                        >
+
+                            <option value="">
+                                Select account type
+                            </option>
+
+                            <option value="STUDENT">
+                                Student
+                            </option>
+
+                            <option value="FACULTY">
+                                Faculty
+                            </option>
+
+                            <option value="STAFF">
+                                Staff
+                            </option>
+
+                            <option value="ADMIN">
+                                Admin
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DEPARTMENT -->
+
+                <div class="form-group full-width">
+
+                    <label for="department">
+                        Department/College *
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="fa-solid fa-graduation-cap"></i>
+
+                        <select
+                                id="department"
+                                th:field="*{department}"
+                                data-validate data-required data-label="Department"
+                        >
+
+                            <option value="">
+                                Select a department
+                            </option>
+
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Electrical Engineering">Electrical Engineering</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Civil Engineering">Civil Engineering</option>
+                            <option value="Business Administration">Business Administration</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Student Affairs">Student Affairs</option>
+                            <option value="Administration">Administration</option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- STUDENT / STAFF ID -->
+
+                <div class="form-group full-width">
+
+                    <label for="studentId">
+                        Student, Staff or Admin ID Number *
+                    </label>
+
+                    <input
+                            id="studentId"
+                            type="text"
+                            th:field="*{studentId}"
+                            placeholder="e.g. 2024001234"
+                            data-validate data-required data-label="ID number"
+                    >
+
+                </div>
+
+
+                <!-- TERMS -->
+
+                <div class="terms-box">
+
+                    <input
+                            id="termsAccepted"
+                            name="termsAccepted"
+                            type="checkbox"
+                            value="true"
+                            data-validate data-required data-label="Terms and Conditions"
+                    >
+
+                    <label for="termsAccepted">
+
+                        I agree to the
+
+                        <a href="#">
+                            Terms and Conditions
+                        </a>
+
+                        and
+
+                        <a href="#">
+                            Acceptable Use Policy
+                        </a>.
+
+                        I understand that this system is for official university
+                        business only.
+
+                    </label>
+
+                </div>
+
+
+                <div class="form-divider"></div>
+
+
+                <!-- SUBMIT -->
+
+                <button
+                        type="submit"
+                        class="create-account-button"
+                >
+                    Create Account
+                </button>
+
+            </form>
+
+
+            <p class="signin-message">
+
+                Already have an account?
+
+                <a th:href="@{/signin}">
+                    Sign in here
+                </a>
+
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <section class="help-box">
+
+        <h3>
+            Need Help?
+        </h3>
+
+        <p>
+            If you are having trouble registering, contact the Facilities
+            Office or IT Help Desk.
+        </p>
+
+        <p>
+            <strong>
+                Facilities Office:
+            </strong>
+
+            facilities@university.edu or (555) 123-4567
+        </p>
+
+        <p>
+            <strong>
+                IT Help Desk:
+            </strong>
+
+            helpdesk@university.edu or (555) 123-4568
+        </p>
+
+    </section>
+
+</main>
+
+
+<footer class="register-footer">
+
+    © 2026 KOI University. All rights reserved.
+
+</footer>
+
+<script th:src="@{/js/form-validate.js}"></script>
+</body>
+
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>KOI University Facility Booking System</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+</head>
+
+<body>
+
+<div class="top-bar">
+    <div class="container top-bar-content">
+
+        <div class="top-links">
+            <a href="#">Campus Map</a>
+            <a href="#">Directory</a>
+            <a href="#">Library</a>
+            <a href="#">IT Services</a>
+        </div>
+
+        <div class="portal-links">
+            <a href="#">Student Portal</a>
+            <span>|</span>
+            <a href="#">Staff Portal</a>
+        </div>
+
+    </div>
+</div>
+
+<header class="main-header">
+
+    <div class="container navigation">
+
+        <a th:href="@{/}" class="brand">
+
+            <div class="brand-logo">KOI</div>
+
+            <div class="brand-text">
+                <h1>KOI University</h1>
+                <p>Facility Booking System</p>
+            </div>
+
+        </a>
+
+        <nav class="main-nav">
+            <a th:href="@{/}" class="active">Home</a>
+            <a th:href="@{/about}">About</a>
+            <a th:href="@{/signin}">Sign In</a>
+            <a th:href="@{/register}" class="register-button">Register</a>
+        </nav>
+
+    </div>
+
+</header>
+
+<section class="hero">
+
+    <div class="hero-overlay"></div>
+
+    <div class="container hero-content">
+
+        <div class="hero-text">
+
+            <span class="hero-label">
+                KOI UNIVERSITY — FACILITY MANAGEMENT
+            </span>
+
+            <h2>
+                Campus Facility<br>
+                <strong>Booking System</strong>
+            </h2>
+
+            <p>
+                Reserve lecture halls, labs, auditoriums, and meeting rooms across
+                KOI University campus. A centralised platform for all your event
+                and facility booking needs.
+            </p>
+
+            <div class="hero-actions">
+
+                <a href="#facilities" class="primary-button">
+                    Get Started
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+
+                <a th:href="@{/signin}" class="secondary-button">
+                    Sign In
+                </a>
+
+            </div>
+
+        </div>
+
+        <div class="hero-gallery">
+
+            <div class="gallery-top">
+
+                <img
+                        src="https://images.unsplash.com/photo-1519452575417-564c1401ecc0?auto=format&fit=crop&w=700&q=80"
+                        alt="Lecture Hall"
+                >
+
+                <img
+                        src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=700&q=80"
+                        alt="Computer Laboratory"
+                >
+
+            </div>
+
+            <div class="gallery-bottom">
+
+                <img
+                        src="https://images.unsplash.com/photo-1564981797816-1043664bf78d?auto=format&fit=crop&w=1200&q=80"
+                        alt="University Campus"
+                >
+
+                <div class="facility-count">
+                    <i class="fa-solid fa-location-dot"></i>
+                    54 Facilities on Campus
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="statistics">
+
+    <div class="container statistics-grid">
+
+        <div class="stat-item">
+            <strong>54</strong>
+            <span>Available Facilities</span>
+        </div>
+
+        <div class="stat-item">
+            <strong>2,847</strong>
+            <span>Active Users</span>
+        </div>
+
+        <div class="stat-item">
+            <strong>8,234</strong>
+            <span>Bookings This Semester</span>
+        </div>
+
+        <div class="stat-item">
+            <strong>24/7</strong>
+            <span>System Access</span>
+        </div>
+
+    </div>
+
+</section>
+
+<section class="facilities-section" id="facilities">
+
+    <div class="container">
+
+        <div class="section-heading">
+            <h2>Browse Available Facilities</h2>
+            <p>Explore our wide range of campus venues and resources</p>
+        </div>
+
+        <div class="facility-grid">
+
+            <article class="facility-card">
+
+                <img
+                        src="https://images.unsplash.com/photo-1519452575417-564c1401ecc0?auto=format&fit=crop&w=900&q=80"
+                        alt="Lecture Halls"
+                >
+
+                <div class="facility-card-content">
+
+                    <h3>Lecture Halls</h3>
+                    <p class="facility-summary">15 halls, capacity 50–200</p>
+
+                    <ul>
+                        <li>Projector &amp; Audio System</li>
+                        <li>Whiteboard &amp; Smart Board</li>
+                        <li>Wi-Fi &amp; Power Outlets</li>
+                    </ul>
+
+                </div>
+
+            </article>
+
+            <article class="facility-card">
+
+                <img
+                        src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=900&q=80"
+                        alt="Computer Labs"
+                >
+
+                <div class="facility-card-content">
+
+                    <h3>Computer Labs</h3>
+                    <p class="facility-summary">8 labs, capacity 25–60</p>
+
+                    <ul>
+                        <li>High-Speed Computers</li>
+                        <li>Specialised Software</li>
+                        <li>Network Printing</li>
+                    </ul>
+
+                </div>
+
+            </article>
+
+            <article class="facility-card">
+
+                <img
+                        src="https://images.unsplash.com/photo-1509824227185-9c5a01ceba0d?auto=format&fit=crop&w=900&q=80"
+                        alt="Auditoriums"
+                >
+
+                <div class="facility-card-content">
+
+                    <h3>Auditoriums</h3>
+                    <p class="facility-summary">3 venues, capacity 200–500</p>
+
+                    <ul>
+                        <li>Professional Sound System</li>
+                        <li>Stage &amp; Lighting</li>
+                        <li>Recording Capabilities</li>
+                    </ul>
+
+                </div>
+
+            </article>
+
+            <article class="facility-card">
+
+                <img
+                        src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80"
+                        alt="Meeting Rooms"
+                >
+
+                <div class="facility-card-content">
+
+                    <h3>Meeting Rooms</h3>
+                    <p class="facility-summary">12 rooms, capacity 8–25</p>
+
+                    <ul>
+                        <li>Conference Tables</li>
+                        <li>Video Conferencing</li>
+                        <li>Presentation Display</li>
+                    </ul>
+
+                </div>
+
+            </article>
+
+            <article class="facility-card">
+
+                <div class="science-image">🔬</div>
+
+                <div class="facility-card-content">
+
+                    <h3>Science Labs</h3>
+                    <p class="facility-summary">6 labs with equipment</p>
+
+                    <ul>
+                        <li>Lab Equipment &amp; Tools</li>
+                        <li>Safety Systems</li>
+                        <li>Storage Facilities</li>
+                    </ul>
+
+                </div>
+
+            </article>
+
+            <article class="facility-card">
+
+                <img
+                        src="https://images.unsplash.com/photo-1564981797816-1043664bf78d?auto=format&fit=crop&w=900&q=80"
+                        alt="Study Rooms"
+                >
+
+                <div class="facility-card-content">
+
+                    <h3>Study Rooms</h3>
+                    <p class="facility-summary">20 rooms, capacity 4–12</p>
+
+                    <ul>
+                        <li>Quiet Environment</li>
+                        <li>Whiteboards</li>
+                        <li>Comfortable Seating</li>
+                    </ul>
+
+                </div>
+
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="benefits-section">
+
+    <div class="container">
+
+        <div class="section-heading">
+            <h2>Why Use Our System?</h2>
+            <p>Efficient, reliable, and easy to use</p>
+        </div>
+
+        <div class="benefits-grid">
+
+            <article class="benefit-item">
+
+                <div class="benefit-icon">
+                    <i class="fa-regular fa-calendar"></i>
+                </div>
+
+                <h3>Real-Time Availability</h3>
+
+                <p>
+                    Check room availability instantly and avoid conflicts
+                </p>
+
+            </article>
+
+            <article class="benefit-item">
+
+                <div class="benefit-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+
+                <h3>Automated Approvals</h3>
+
+                <p>
+                    Quick approval workflow for fast confirmation
+                </p>
+
+            </article>
+
+            <article class="benefit-item">
+
+                <div class="benefit-icon">
+                    <i class="fa-regular fa-bell"></i>
+                </div>
+
+                <h3>Email Notifications</h3>
+
+                <p>
+                    Get instant updates on your booking status
+                </p>
+
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="cta-section">
+
+    <div class="cta-overlay"></div>
+
+    <div class="container cta-content">
+
+        <h2>Ready to Get Started?</h2>
+
+        <p>
+            Create your KOI University account and start booking facilities today
+        </p>
+
+        <div class="cta-buttons">
+
+            <a th:href="@{/register}" class="cta-primary">Create Account</a>
+
+            <a th:href="@{/signin}" class="cta-secondary">
+                Sign In
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+<footer class="site-footer">
+
+    <div class="container footer-grid">
+
+        <div>
+            <h3>Quick Links</h3>
+            <a href="#">Campus Map</a>
+            <a href="#">Academic Calendar</a>
+            <a href="#">Departments</a>
+            <a href="#">Library</a>
+        </div>
+
+        <div>
+            <h3>Resources</h3>
+            <a href="#">User Guide</a>
+            <a href="#">FAQ</a>
+            <a href="#">Policies</a>
+            <a href="#">Guidelines</a>
+        </div>
+
+        <div>
+            <h3>Support</h3>
+            <a href="#">Help Desk</a>
+            <a href="#">IT Services</a>
+            <a href="#">Report Issue</a>
+            <a href="#">Contact Us</a>
+        </div>
+
+        <div>
+            <h3>Contact</h3>
+            <p>Facilities Office</p>
+            <p>Phone: (555) 123-4567</p>
+            <p>Email: facilities@koi.edu</p>
+            <p>Hours: Mon–Fri 8AM–5PM</p>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        © 2026 KOI University. All rights reserved.
+    </div>
+
+</footer>
+
+</body>
+</html>

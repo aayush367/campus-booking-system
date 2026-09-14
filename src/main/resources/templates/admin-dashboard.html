@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Admin Dashboard | Campus Booking System
+  </title>
+
+  <link
+          rel="stylesheet"
+          th:href="@{/css/admin-dashboard.css}"
+  >
+
+  <link
+          rel="stylesheet"
+          th:href="@{/css/calendar.css}"
+  >
+
+  <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+
+  <link rel="stylesheet" th:href="@{/css/app-theme.css}">
+
+  <script
+          src="https://cdn.jsdelivr.net/npm/chart.js"
+  ></script>
+
+  <link rel="stylesheet" th:href="@{/css/form-validate.css}">
+</head>
+
+<body>
+
+
+<!-- ========================================================= -->
+<!-- HEADER -->
+<!-- ========================================================= -->
+
+<header class="top-header">
+
+  <div class="header-left">
+
+    <div class="header-logo">
+
+      <i class="fa-regular fa-calendar"></i>
+
+    </div>
+
+    <div>
+
+      <h1>
+        Campus Booking System
+      </h1>
+
+      <p>
+        Admin Dashboard
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="header-right">
+
+    <div class="notification-wrapper">
+
+      <button
+              type="button"
+              class="notification-button"
+              id="notificationButton"
+      >
+
+        <i class="fa-regular fa-bell"></i>
+
+        <span class="notification-count"
+              th:if="${unreadCount != null and unreadCount > 0}"
+              th:text="${unreadCount}">0</span>
+
+      </button>
+
+
+      <div
+              class="notification-dropdown"
+              id="notificationDropdown"
+      >
+
+        <div class="notification-header">
+
+          <div>
+            <h3>Notifications</h3>
+            <span th:text="${(unreadCount != null ? unreadCount : 0) + ' unread'}">0 unread</span>
+          </div>
+
+          <form th:action="@{/notifications/read-all}" method="post">
+            <button type="submit">Mark all read</button>
+          </form>
+
+        </div>
+
+
+        <a th:href="@{/notifications}" class="notification-viewall"
+           style="display:block;padding:8px 14px;font-size:13px;font-weight:600;color:#203e96;">
+          View all notifications
+        </a>
+
+
+        <div class="notification-empty"
+             th:if="${notifications == null or #lists.isEmpty(notifications)}">
+          You have no notifications yet.
+        </div>
+
+
+        <div class="notification-item"
+             th:each="note : ${notifications}"
+             th:classappend="${note.read} ? 'is-read' : 'is-unread'">
+
+          <div class="notification-icon"
+               th:classappend="${#strings.toLowerCase(note.type)}">
+            <i class="fa-solid fa-check" th:if="${note.type == 'APPROVED'}"></i>
+            <i class="fa-solid fa-xmark" th:if="${note.type == 'REJECTED'}"></i>
+            <i class="fa-regular fa-clock" th:if="${note.type == 'PENDING'}"></i>
+            <i class="fa-regular fa-bell"
+               th:if="${note.type != 'APPROVED' and note.type != 'REJECTED' and note.type != 'PENDING'}"></i>
+          </div>
+
+          <div>
+            <strong th:text="${note.title}">Notification</strong>
+            <p th:text="${note.message}">Message</p>
+            <small th:text="${#temporals.format(note.createdAt, 'dd MMM yyyy, HH:mm')}">Just now</small>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="user-details">
+
+      <strong
+              th:text="${user.fullName}"
+      >
+        Admin User
+      </strong>
+
+      <span
+              th:text="${user.email}"
+      >
+                admin@university.edu
+            </span>
+
+    </div>
+
+
+    <a
+            th:href="@{/logout}"
+            class="logout-link"
+    >
+
+      <i class="fa-solid fa-arrow-right-from-bracket"></i>
+
+      Logout
+
+    </a>
+
+  </div>
+
+</header>
+
+
+<!-- ========================================================= -->
+<!-- NAVIGATION -->
+<!-- ========================================================= -->
+
+<nav class="dashboard-nav">
+
+
+  <button
+          type="button"
+          class="nav-tab active"
+          data-tab="dashboardView"
+  >
+    <i class="fa-solid fa-table-cells-large"></i>
+    Dashboard
+  </button>
+
+
+  <button
+          type="button"
+          class="nav-tab"
+          data-tab="searchView"
+  >
+    <i class="fa-solid fa-magnifying-glass"></i>
+    Search
+  </button>
+
+
+  <button
+          type="button"
+          class="nav-tab"
+          data-tab="calendarView"
+  >
+    <i class="fa-regular fa-calendar"></i>
+    Calendar
+  </button>
+
+
+  <button
+          type="button"
+          class="nav-tab"
+          data-tab="adminPanelView"
+  >
+    <i class="fa-solid fa-shield-halved"></i>
+    Admin Panel
+  </button>
+
+
+  <button
+          type="button"
+          class="nav-tab"
+          data-tab="analyticsView"
+  >
+    <i class="fa-solid fa-chart-column"></i>
+    Analytics
+  </button>
+
+
+  <button
+          type="button"
+          class="nav-tab"
+          data-tab="auditView"
+  >
+    <i class="fa-regular fa-file-lines"></i>
+    Audit Trail
+  </button>
+
+
+  <button
+          type="button"
+          class="new-booking-btn"
+          id="openAdminBookingModal"
+  >
+    <i class="fa-solid fa-plus"></i>
+    New Booking
+  </button>
+
+</nav>
+
+
+<!-- ========================================================= -->
+<!-- MAIN -->
+<!-- ========================================================= -->
+
+<main class="main-content">
+
+
+  <!-- ===================================================== -->
+  <!-- DASHBOARD -->
+  <!-- ===================================================== -->
+
+  <section
+          id="dashboardView"
+          class="tab-view active-view"
+  >
+
+
+    <div class="stats-grid">
+
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Total Bookings
+          </p>
+
+          <strong
+                  th:text="${totalBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon total">
+          <i class="fa-regular fa-calendar"></i>
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Pending
+          </p>
+
+          <strong
+                  th:text="${pendingBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon pending">
+          <i class="fa-regular fa-clock"></i>
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Approved
+          </p>
+
+          <strong
+                  th:text="${approvedBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon approved">
+          <i class="fa-solid fa-check"></i>
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Rejected
+          </p>
+
+          <strong
+                  th:text="${rejectedBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon rejected">
+          <i class="fa-solid fa-xmark"></i>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <section class="content-card">
+
+      <div class="card-header">
+
+        <h3>
+          All Bookings
+        </h3>
+
+      </div>
+
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+          <tr>
+
+            <th>Room</th>
+            <th>Requested By</th>
+            <th>Date & Time</th>
+            <th>Attendees</th>
+            <th>Description</th>
+            <th>Status</th>
+
+          </tr>
+
+          </thead>
+
+
+          <tbody>
+
+          <tr th:each="booking : ${allBookings}">
+
+
+            <td>
+
+              <i class="fa-solid fa-location-dot table-icon"></i>
+
+              <span
+                      th:text="${booking.room}"
+              >
+                                Engineering Hall A101
+                            </span>
+
+            </td>
+
+
+            <td
+                    th:text="${booking.user.fullName}"
+            >
+              John Student
+            </td>
+
+
+            <td>
+
+              <strong
+                      th:text="${booking.date}"
+              >
+                30/04/2026
+              </strong>
+
+              <small>
+
+                                <span
+                                        th:text="${booking.startTime}"
+                                >
+                                    10:00
+                                </span>
+
+                -
+
+                <span
+                        th:text="${booking.endTime}"
+                >
+                                    12:00
+                                </span>
+
+              </small>
+
+            </td>
+
+
+            <td>
+
+              <i class="fa-solid fa-users table-icon"></i>
+
+              <span
+                      th:text="${booking.numberOfAttendees}"
+              >
+                                75
+                            </span>
+
+            </td>
+
+
+            <td>
+
+                            <span
+                                    class="description-text"
+                                    th:text="${booking.description != null && !booking.description.isBlank()
+                                    ? booking.description
+                                    : booking.eventType}"
+                            >
+                                Description
+                            </span>
+
+            </td>
+
+
+            <td>
+
+                            <span
+                                    class="status-badge"
+                                    th:classappend="${#strings.toLowerCase(booking.status)}"
+                                    th:text="${#strings.capitalize(#strings.toLowerCase(booking.status))}"
+                            >
+                                APPROVED
+                            </span>
+
+            </td>
+
+          </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- SEARCH -->
+  <!-- ===================================================== -->
+
+  <section
+          id="searchView"
+          class="tab-view"
+  >
+
+
+    <div class="search-card">
+
+      <div class="search-input">
+
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+                id="adminSearchInput"
+                type="text"
+                placeholder="Search by room, requester, description, or department..."
+        >
+
+      </div>
+
+
+      <select id="adminStatusFilter" class="filter-btn">
+        <option value="ALL">All statuses</option>
+        <option value="PENDING">Pending</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED">Rejected</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+
+    </div>
+
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div>
+          <p>Total Bookings</p>
+          <strong th:text="${totalBookings}">0</strong>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>Pending</p>
+          <strong th:text="${pendingBookings}">0</strong>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>Approved</p>
+          <strong th:text="${approvedBookings}">0</strong>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <p>Rejected</p>
+          <strong th:text="${rejectedBookings}">0</strong>
+        </div>
+      </div>
+
+    </div>
+
+
+    <section class="content-card">
+
+      <div class="card-header">
+        <h3>All Bookings</h3>
+      </div>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+          <tr>
+
+            <th>Room</th>
+            <th>Requested By</th>
+            <th>Date & Time</th>
+            <th>Attendees</th>
+            <th>Description</th>
+            <th>Status</th>
+
+          </tr>
+
+          </thead>
+
+          <tbody>
+
+          <tr
+                  class="searchable-row"
+                  th:each="booking : ${allBookings}"
+                  th:attr="data-status=${booking.status}"
+          >
+
+            <td th:text="${booking.room}">
+              Room
+            </td>
+
+            <td th:text="${booking.user.fullName}">
+              User
+            </td>
+
+            <td>
+
+                            <span th:text="${booking.date}">
+                                Date
+                            </span>
+
+              <small>
+
+                                <span th:text="${booking.startTime}">
+                                    Start
+                                </span>
+
+                -
+
+                <span th:text="${booking.endTime}">
+                                    End
+                                </span>
+
+              </small>
+
+            </td>
+
+            <td th:text="${booking.numberOfAttendees}">
+              0
+            </td>
+
+            <td
+                    th:text="${booking.description != null
+                                ? booking.description
+                                : booking.eventType}"
+            >
+              Description
+            </td>
+
+            <td>
+
+                            <span
+                                    class="status-badge"
+                                    th:classappend="${#strings.toLowerCase(booking.status)}"
+                                    th:text="${#strings.capitalize(#strings.toLowerCase(booking.status))}"
+                            >
+                                APPROVED
+                            </span>
+
+            </td>
+
+          </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- CALENDAR -->
+  <!-- ===================================================== -->
+
+  <section
+          id="calendarView"
+          class="tab-view"
+  >
+
+
+    <section class="calendar-card">
+
+      <div class="calendar-header">
+        <h2>Weekly Calendar</h2>
+      </div>
+
+      <div class="cal-toolbar">
+        <span class="cal-range" id="calendarRangeLabel">This week</span>
+        <div class="cal-nav">
+          <button type="button" id="calendarPrev" aria-label="Previous week">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button type="button" id="calendarNext" aria-label="Next week">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="calendarGrid"></div>
+
+    </section>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- ADMIN PANEL -->
+  <!-- ===================================================== -->
+
+  <section
+          id="adminPanelView"
+          class="tab-view"
+  >
+
+
+    <section class="admin-panel-card">
+
+
+      <div class="admin-subnav">
+
+        <button
+                type="button"
+                class="admin-subtab active"
+                data-admin-view="pendingAdminView"
+        >
+          Pending Approvals
+          (<span th:text="${pendingBookings}">0</span>)
+        </button>
+
+
+        <button
+                type="button"
+                class="admin-subtab"
+                data-admin-view="roomsAdminView"
+        >
+          Manage Rooms (<span th:text="${allRooms != null ? #lists.size(allRooms) : 0}">0</span>)
+        </button>
+
+
+        <button
+                type="button"
+                class="admin-subtab"
+                data-admin-view="reportsAdminView"
+        >
+          Reports & Analytics
+        </button>
+
+      </div>
+
+
+      <!-- PENDING APPROVALS -->
+
+      <div
+              id="pendingAdminView"
+              class="admin-subview active-subview"
+      >
+
+
+        <div
+                class="admin-empty"
+                th:if="${#lists.isEmpty(pendingBookingsList)}"
+        >
+
+          <i class="fa-solid fa-circle-check"></i>
+
+          <h3>
+            No pending approvals
+          </h3>
+
+          <p>
+            All booking requests have been reviewed.
+          </p>
+
+        </div>
+
+
+        <article
+                class="approval-card"
+                th:each="booking : ${pendingBookingsList}"
+        >
+
+
+          <div class="approval-main">
+
+
+            <div class="approval-room">
+
+              <div class="approval-icon">
+
+                <i class="fa-solid fa-location-dot"></i>
+
+              </div>
+
+
+              <div>
+
+                <h3
+                        th:text="${booking.room}"
+                >
+                  Main Auditorium
+                </h3>
+
+                <p>
+
+                  Requested by
+
+                  <span
+                          th:text="${booking.user.fullName}"
+                  >
+                                        John Student
+                                    </span>
+
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div class="approval-meta">
+
+                            <span>
+
+                                <i class="fa-regular fa-calendar"></i>
+
+                                <span
+                                        th:text="${booking.date}"
+                                >
+                                    Date
+                                </span>
+
+                            </span>
+
+
+              <span>
+
+                                <i class="fa-regular fa-clock"></i>
+
+                                <span
+                                        th:text="${booking.startTime}"
+                                >
+                                    Start
+                                </span>
+
+                                -
+
+                                <span
+                                        th:text="${booking.endTime}"
+                                >
+                                    End
+                                </span>
+
+                            </span>
+
+
+              <span>
+
+                                <i class="fa-solid fa-users"></i>
+
+                                <span
+                                        th:text="${booking.numberOfAttendees}"
+                                >
+                                    0
+                                </span>
+
+                                attendees
+
+                            </span>
+
+            </div>
+
+
+            <div
+                    class="approval-description"
+                    th:text="${booking.description != null
+                                ? booking.description
+                                : booking.eventType}"
+            >
+              Booking description
+            </div>
+
+          </div>
+
+
+          <div class="approval-actions">
+
+
+            <form
+                    th:action="@{'/admin/bookings/' + ${booking.id} + '/approve'}"
+                    method="post"
+            >
+
+              <button
+                      type="submit"
+                      class="approve-btn"
+              >
+
+                <i class="fa-solid fa-check"></i>
+
+                Quick Approve
+
+              </button>
+
+            </form>
+
+
+            <form
+                    class="reject-form"
+                    th:action="@{'/admin/bookings/' + ${booking.id} + '/reject'}"
+                    method="post"
+            >
+
+              <input type="hidden" name="note" class="reject-note-input">
+
+              <button
+                      type="submit"
+                      class="reject-btn"
+              >
+
+                <i class="fa-solid fa-xmark"></i>
+
+                Quick Reject
+
+              </button>
+
+            </form>
+
+          </div>
+
+        </article>
+
+      </div>
+
+
+      <!-- ROOMS -->
+
+      <div
+              id="roomsAdminView"
+              class="admin-subview"
+      >
+
+        <div style="margin-bottom:16px;">
+          <a th:href="@{/admin/rooms}" class="admin-primary-btn"
+             style="display:inline-block;padding:9px 16px;background:#203e96;color:#fff;
+                    border-radius:6px;text-decoration:none;font-weight:600;">
+            <i class="fa-solid fa-gear"></i> Open Full Room Management
+          </a>
+        </div>
+
+        <div class="room-grid">
+
+          <article th:each="r : ${allRooms}">
+            <h3 th:text="${r.name}">Room</h3>
+            <p th:text="${r.type} + (${r.active} ? '' : ' (inactive)')">Type</p>
+            <span th:text="'Capacity: ' + ${r.capacity}">Capacity: 0</span>
+          </article>
+
+        </div>
+
+      </div>
+
+
+      <!-- REPORTS -->
+
+      <div
+              id="reportsAdminView"
+              class="admin-subview"
+      >
+
+        <div class="reports-info">
+
+          <h3>
+            Reports & Analytics
+          </h3>
+
+          <p>
+            Use the Analytics tab for detailed booking insights.
+          </p>
+
+          <button
+                  type="button"
+                  data-open-main-tab="analyticsView"
+          >
+            Open Analytics
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- ANALYTICS -->
+  <!-- ===================================================== -->
+
+  <section
+          id="analyticsView"
+          class="tab-view"
+  >
+
+
+    <div class="analytics-title">
+
+      <div>
+
+        <h2>
+          Advanced Analytics
+        </h2>
+
+        <p>
+          Comprehensive insights and trends
+        </p>
+
+      </div>
+
+
+      <a th:href="@{/admin/bookings/export.csv}" class="export-btn"
+         style="text-decoration:none;">
+        <i class="fa-solid fa-download"></i>
+        Export CSV
+      </a>
+
+    </div>
+
+
+    <div class="analytics-stats">
+
+
+      <article>
+
+                <span>
+                    Total Events
+                </span>
+
+        <strong
+                th:text="${totalBookings}"
+        >
+          0
+        </strong>
+
+        <small>
+          All recorded bookings
+        </small>
+
+      </article>
+
+
+      <article>
+
+                <span>
+                    Approval Rate
+                </span>
+
+        <strong>
+                    <span
+                            th:text="${approvalRate}"
+                    >
+                        0.0
+                    </span>%
+        </strong>
+
+        <small>
+          Based on all bookings
+        </small>
+
+      </article>
+
+
+      <article>
+
+                <span>
+                    Total Attendees
+                </span>
+
+        <strong
+                th:text="${totalAttendees}"
+        >
+          0
+        </strong>
+
+        <small>
+
+          Avg:
+
+          <span
+                  th:text="${averageAttendees}"
+          >
+                        0
+                    </span>
+
+          per event
+
+        </small>
+
+      </article>
+
+
+      <article>
+
+                <span>
+                    Total Users
+                </span>
+
+        <strong
+                th:text="${totalUsers}"
+        >
+          0
+        </strong>
+
+        <small>
+          Registered accounts
+        </small>
+
+      </article>
+
+    </div>
+
+
+    <section class="chart-card">
+
+      <h3>
+        Booking Status Distribution
+      </h3>
+
+      <div class="chart-area">
+        <canvas id="statusChart"></canvas>
+      </div>
+
+    </section>
+
+
+    <div class="chart-two-column">
+
+
+      <section class="chart-card">
+
+        <h3>
+          Event Type Distribution
+        </h3>
+
+        <div class="chart-area smaller">
+          <canvas id="eventTypeChart"></canvas>
+        </div>
+
+      </section>
+
+
+      <section class="chart-card">
+
+        <h3>
+          Bookings by Department
+        </h3>
+
+        <div class="chart-area smaller">
+          <canvas id="departmentChart"></canvas>
+        </div>
+
+      </section>
+
+    </div>
+
+
+    <section class="chart-card">
+
+      <h3>
+        Bookings by Month
+      </h3>
+
+      <div class="chart-area">
+        <canvas id="monthChart"></canvas>
+      </div>
+
+    </section>
+
+
+    <section class="chart-card">
+
+      <h3>
+        Bookings by Room
+      </h3>
+
+      <div class="chart-area">
+        <canvas id="roomChart"></canvas>
+      </div>
+
+    </section>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- AUDIT TRAIL -->
+  <!-- ===================================================== -->
+
+  <section
+          id="auditView"
+          class="tab-view"
+  >
+
+
+    <section class="audit-card">
+
+
+      <div class="audit-header">
+
+        <div>
+          <h2>Audit Trail</h2>
+          <p>Complete system activity log</p>
+        </div>
+
+        <a th:href="@{/admin/audit/export.csv}" class="export-btn"
+           style="text-decoration:none;">
+          <i class="fa-solid fa-download"></i> Export CSV
+        </a>
+
+      </div>
+
+
+      <div class="audit-empty" th:if="${auditLogs == null or #lists.isEmpty(auditLogs)}"
+           style="padding:40px;text-align:center;color:#7b8392;">
+        No activity recorded yet.
+      </div>
+
+
+      <article class="audit-entry"
+               th:each="log : ${auditLogs}"
+               th:classappend="${log.action.contains('APPROVED') or log.action.contains('CREATED') ? 'approved-entry'
+                                 : (log.action.contains('REJECTED') or log.action.contains('DELETED') ? 'rejected-entry' : 'pending-entry')}">
+
+        <div class="audit-icon">
+          <i class="fa-solid fa-check" th:if="${log.action.contains('APPROVED')}"></i>
+          <i class="fa-solid fa-xmark" th:if="${log.action.contains('REJECTED') or log.action.contains('DELETED')}"></i>
+          <i class="fa-solid fa-plus" th:if="${log.action.contains('CREATED') or log.action.contains('REGISTERED')}"></i>
+          <i class="fa-regular fa-file-lines"
+             th:if="${!log.action.contains('APPROVED') and !log.action.contains('REJECTED')
+                      and !log.action.contains('DELETED') and !log.action.contains('CREATED')
+                      and !log.action.contains('REGISTERED')}"></i>
+        </div>
+
+        <div class="audit-content">
+          <strong th:text="${#strings.replace(log.action, '_', ' ')}">ACTION</strong>
+          <p th:text="${log.description}">Description</p>
+          <small>
+            <span th:text="${log.performedBy}">User</span>
+            ·
+            <span th:text="${#temporals.format(log.createdAt, 'dd MMM yyyy, HH:mm')}">time</span>
+          </small>
+        </div>
+
+      </article>
+
+    </section>
+
+  </section>
+
+</main>
+
+
+<!-- ========================================================= -->
+<!-- ADMIN NEW BOOKING MODAL -->
+<!-- ========================================================= -->
+
+<div
+        class="modal-overlay"
+        id="adminBookingModal"
+>
+
+  <div class="booking-modal">
+
+
+    <div class="modal-header">
+
+      <div>
+
+        <h2>
+          New Booking Request
+        </h2>
+
+        <p>
+          Create an administrator booking
+        </p>
+
+      </div>
+
+
+      <button
+              type="button"
+              class="modal-close"
+              id="closeAdminBookingModal"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+    </div>
+
+
+    <form
+            th:action="@{/booking}"
+            th:object="${booking}"
+            method="post"
+            class="js-validate" data-form="booking"
+    >
+
+      <div class="modal-body">
+
+
+        <h3>
+          Basic Information
+        </h3>
+
+
+        <div class="modal-field full">
+
+          <label for="room">
+            Room *
+          </label>
+
+          <select
+                  id="room"
+                  th:field="*{room}"
+                  data-validate data-required
+          >
+
+            <option value="">
+              Select room
+            </option>
+
+            <option th:each="r : ${rooms}"
+                    th:value="${r.name}"
+                    th:attr="data-capacity=${r.capacity}"
+                    th:text="${r.name + ' - ' + r.type + ' (Capacity: ' + r.capacity + ')'}">
+              Room
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="modal-grid">
+
+
+          <div class="modal-field">
+
+            <label>
+              Event Type *
+            </label>
+
+            <select
+                    th:field="*{eventType}"
+                    data-validate data-required
+            >
+
+              <option value="">Select event type</option>
+              <option value="Academic">Academic</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Seminar">Seminar</option>
+              <option value="Conference">Conference</option>
+              <option value="Club Meeting">Club Meeting</option>
+              <option value="Sports Event">Sports Event</option>
+              <option value="Cultural Event">Cultural Event</option>
+              <option value="Examination">Examination</option>
+              <option value="Other">Other</option>
+
+            </select>
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label>
+              Department *
+            </label>
+
+            <select
+                    th:field="*{department}"
+                    data-validate data-required
+            >
+
+              <option value="">Select department</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Electrical Engineering">Electrical Engineering</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+              <option value="Business Administration">Business Administration</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Student Affairs">Student Affairs</option>
+
+            </select>
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label>
+              Priority *
+            </label>
+
+            <select
+                    th:field="*{priority}"
+                    data-validate data-required
+            >
+
+              <option value="">
+                Select priority
+              </option>
+
+              <option value="Low">
+                Low
+              </option>
+
+              <option value="Medium">
+                Medium
+              </option>
+
+              <option value="High">
+                High
+              </option>
+
+              <option value="Critical">
+                Critical
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label>
+              Attendees *
+            </label>
+
+            <input
+                    type="number"
+                    min="1"
+                    th:field="*{numberOfAttendees}"
+                    data-validate data-required data-type="number" data-min="1"
+            >
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label>
+              Date *
+            </label>
+
+            <input
+                    id="adminBookingDate"
+                    type="date"
+                    th:field="*{date}"
+                    data-validate data-required
+            >
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label>
+              Start Time *
+            </label>
+
+            <input
+                    type="time"
+                    th:field="*{startTime}"
+                    data-validate data-required
+            >
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label>
+              End Time *
+            </label>
+
+            <input
+                    type="time"
+                    th:field="*{endTime}"
+                    data-validate data-required
+            >
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label>
+              Setup Time
+            </label>
+
+            <input
+                    type="number"
+                    min="0"
+                    th:field="*{setupTime}"
+                    placeholder="0"
+            >
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label>
+              Cleanup Time
+            </label>
+
+            <input
+                    type="number"
+                    min="0"
+                    th:field="*{cleanupTime}"
+                    placeholder="0"
+            >
+
+          </div>
+
+        </div>
+
+
+        <div class="modal-field full">
+
+          <label>
+            Equipment Needed
+          </label>
+
+          <input
+                  type="text"
+                  th:field="*{equipmentNeeded}"
+                  placeholder="Projector, microphone, WiFi..."
+          >
+
+        </div>
+
+
+        <div class="modal-field full">
+
+          <label>
+            Description
+          </label>
+
+          <textarea
+                  th:field="*{description}"
+                  rows="5"
+                  placeholder="Enter booking details..."
+          ></textarea>
+
+        </div>
+
+
+        <div class="recurring-row">
+
+          <input
+                  id="adminRecurring"
+                  type="checkbox"
+                  th:field="*{recurring}"
+          >
+
+          <label for="adminRecurring">
+            Recurring Event
+          </label>
+
+        </div>
+
+      </div>
+
+
+      <div class="modal-footer">
+
+        <button
+                type="button"
+                class="cancel-modal-btn"
+                id="cancelAdminBookingModal"
+        >
+          Cancel
+        </button>
+
+        <button
+                type="submit"
+                class="submit-booking-btn"
+        >
+          Submit Request
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script th:inline="javascript">
+
+  document.addEventListener(
+          "DOMContentLoaded",
+          function () {
+
+
+            // MAIN TABS
+
+            const tabs =
+                    document.querySelectorAll(
+                            ".nav-tab"
+                    );
+
+            const views =
+                    document.querySelectorAll(
+                            ".tab-view"
+                    );
+
+
+            function openMainView(
+                    viewId) {
+
+              tabs.forEach(function (tab) {
+
+                tab.classList.remove(
+                        "active"
+                );
+
+
+                if (
+                        tab.dataset.tab ===
+                        viewId
+                ) {
+
+                  tab.classList.add(
+                          "active"
+                  );
+
+                }
+
+              });
+
+
+              views.forEach(function (view) {
+
+                view.classList.remove(
+                        "active-view"
+                );
+
+              });
+
+
+              const target =
+                      document.getElementById(
+                              viewId
+                      );
+
+
+              if (target) {
+
+                target.classList.add(
+                        "active-view"
+                );
+
+              }
+
+            }
+
+
+            tabs.forEach(function (tab) {
+
+              tab.addEventListener(
+                      "click",
+                      function () {
+
+                        openMainView(
+                                tab.dataset.tab
+                        );
+
+                      }
+              );
+
+            });
+
+
+            document
+                    .querySelectorAll(
+                            "[data-open-main-tab]"
+                    )
+                    .forEach(
+                            function (button) {
+
+                              button.addEventListener(
+                                      "click",
+                                      function () {
+
+                                        openMainView(
+                                                button.dataset
+                                                        .openMainTab
+                                        );
+
+                                      }
+                              );
+
+                            }
+                    );
+
+
+            // ADMIN SUBTABS
+
+            const adminTabs =
+                    document.querySelectorAll(
+                            ".admin-subtab"
+                    );
+
+            const adminViews =
+                    document.querySelectorAll(
+                            ".admin-subview"
+                    );
+
+
+            adminTabs.forEach(function (tab) {
+
+              tab.addEventListener(
+                      "click",
+                      function () {
+
+                        adminTabs.forEach(
+                                function (item) {
+
+                                  item.classList
+                                          .remove(
+                                                  "active"
+                                          );
+
+                                }
+                        );
+
+
+                        adminViews.forEach(
+                                function (view) {
+
+                                  view.classList
+                                          .remove(
+                                                  "active-subview"
+                                          );
+
+                                }
+                        );
+
+
+                        tab.classList.add(
+                                "active"
+                        );
+
+
+                        document
+                                .getElementById(
+                                        tab.dataset
+                                                .adminView
+                                )
+                                .classList
+                                .add(
+                                        "active-subview"
+                                );
+
+                      }
+              );
+
+            });
+
+
+            // NOTIFICATIONS
+
+            const notificationButton =
+                    document.getElementById(
+                            "notificationButton"
+                    );
+
+            const notificationDropdown =
+                    document.getElementById(
+                            "notificationDropdown"
+                    );
+
+
+            if (
+                    notificationButton &&
+                    notificationDropdown
+            ) {
+
+              notificationButton.addEventListener(
+                      "click",
+                      function (event) {
+
+                        event.stopPropagation();
+
+                        notificationDropdown
+                                .classList
+                                .toggle(
+                                        "show"
+                                );
+
+                      }
+              );
+
+
+              document.addEventListener(
+                      "click",
+                      function () {
+
+                        notificationDropdown
+                                .classList
+                                .remove(
+                                        "show"
+                                );
+
+                      }
+              );
+
+            }
+
+
+            // SEARCH
+
+            const searchInput =
+                    document.getElementById(
+                            "adminSearchInput"
+                    );
+
+
+            const statusFilter =
+                    document.getElementById("adminStatusFilter");
+
+            function applyAdminSearch() {
+
+              const value = searchInput
+                      ? searchInput.value.toLowerCase().trim() : "";
+              const status = statusFilter ? statusFilter.value : "ALL";
+
+              document.querySelectorAll(".searchable-row").forEach(
+                      function (row) {
+                        const matchesText =
+                                row.innerText.toLowerCase().includes(value);
+                        const matchesStatus =
+                                status === "ALL" ||
+                                row.getAttribute("data-status") === status;
+                        row.style.display =
+                                (matchesText && matchesStatus) ? "" : "none";
+                      }
+              );
+            }
+
+            if (searchInput) {
+              searchInput.addEventListener("input", applyAdminSearch);
+            }
+            if (statusFilter) {
+              statusFilter.addEventListener("change", applyAdminSearch);
+            }
+
+
+            // REJECT WITH OPTIONAL REASON
+
+            document.querySelectorAll(".reject-form").forEach(function (form) {
+              form.addEventListener("submit", function (event) {
+                const reason = window.prompt(
+                        "Reason for rejecting this booking (optional):", "");
+                if (reason === null) {
+                  event.preventDefault();
+                  return;
+                }
+                const input = form.querySelector(".reject-note-input");
+                if (input) input.value = reason;
+              });
+            });
+
+
+            // MODAL
+
+            const modal =
+                    document.getElementById(
+                            "adminBookingModal"
+                    );
+
+            const openModalButton =
+                    document.getElementById(
+                            "openAdminBookingModal"
+                    );
+
+            const closeModalButton =
+                    document.getElementById(
+                            "closeAdminBookingModal"
+                    );
+
+            const cancelModalButton =
+                    document.getElementById(
+                            "cancelAdminBookingModal"
+                    );
+
+
+            function openModal() {
+
+              modal.classList.add(
+                      "show"
+              );
+
+              document.body.style.overflow =
+                      "hidden";
+
+            }
+
+
+            function closeModal() {
+
+              modal.classList.remove(
+                      "show"
+              );
+
+              document.body.style.overflow =
+                      "";
+
+            }
+
+
+            if (openModalButton) {
+
+              openModalButton.addEventListener(
+                      "click",
+                      openModal
+              );
+
+            }
+
+
+            if (closeModalButton) {
+
+              closeModalButton.addEventListener(
+                      "click",
+                      closeModal
+              );
+
+            }
+
+
+            if (cancelModalButton) {
+
+              cancelModalButton.addEventListener(
+                      "click",
+                      closeModal
+              );
+
+            }
+
+
+            // PREVENT PAST DATE
+
+            const dateInput =
+                    document.getElementById(
+                            "adminBookingDate"
+                    );
+
+
+            if (dateInput) {
+
+              const today =
+                      new Date();
+
+
+              const year =
+                      today.getFullYear();
+
+
+              const month =
+                      String(
+                              today.getMonth() + 1
+                      ).padStart(
+                              2,
+                              "0"
+                      );
+
+
+              const day =
+                      String(
+                              today.getDate()
+                      ).padStart(
+                              2,
+                              "0"
+                      );
+
+
+              dateInput.min =
+                      year +
+                      "-" +
+                      month +
+                      "-" +
+                      day;
+
+            }
+
+
+            // ===== CHART DATA FROM BACKEND =====
+
+            const pending  = /*[[${pendingBookings}]]*/ 0;
+            const approved = /*[[${approvedBookings}]]*/ 0;
+            const rejected = /*[[${rejectedBookings}]]*/ 0;
+            const total    = /*[[${totalBookings}]]*/ 0;
+
+            const byDepartment = /*[[${byDepartment}]]*/ {};
+            const byEventType  = /*[[${byEventType}]]*/ {};
+            const byMonth      = /*[[${byMonth}]]*/ {};
+            const byRoom       = /*[[${byRoom}]]*/ {};
+
+            const PALETTE = [
+              "#203e96", "#22a35a", "#e8a33d", "#dc4b40", "#8b5cf6",
+              "#0ea5e9", "#f97316", "#14b8a6", "#ec4899", "#64748b"
+            ];
+
+            function makeChart(id, type, labels, data, label) {
+              const el = document.getElementById(id);
+              if (!el || typeof Chart === "undefined") return;
+              new Chart(el, {
+                type: type,
+                data: {
+                  labels: labels,
+                  datasets: [{
+                    label: label || "Bookings",
+                    data: data,
+                    backgroundColor: type === "line"
+                        ? "rgba(91,111,240,.15)"
+                        : labels.map(function (_, i) { return PALETTE[i % PALETTE.length]; }),
+                    borderColor: type === "line" ? "#203e96" : "#fff",
+                    borderWidth: type === "line" ? 2 : 1,
+                    fill: type === "line",
+                    tension: .3
+                  }]
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: type === "pie" || type === "doughnut" }
+                  }
+                }
+              });
+            }
+
+            makeChart("statusChart", "bar",
+              ["Pending", "Approved", "Rejected"],
+              [pending, approved, rejected], "Bookings");
+
+            makeChart("eventTypeChart", "doughnut",
+              Object.keys(byEventType), Object.values(byEventType));
+
+            makeChart("departmentChart", "bar",
+              Object.keys(byDepartment), Object.values(byDepartment));
+
+            makeChart("monthChart", "line",
+              Object.keys(byMonth), Object.values(byMonth));
+
+            makeChart("roomChart", "bar",
+              Object.keys(byRoom), Object.values(byRoom));
+
+          }
+  );
+
+</script>
+
+<script th:inline="javascript">
+  window.CALENDAR_EVENTS = /*[[${calendarEvents}]]*/ [];
+</script>
+<script th:src="@{/js/calendar.js}"></script>
+
+
+<script th:src="@{/js/form-validate.js}"></script>
+</body>
+</html>

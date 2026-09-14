@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Faculty Dashboard | Campus Booking System
+  </title>
+
+  <link
+          rel="stylesheet"
+          th:href="@{/css/faculty-dashboard.css}"
+  >
+
+  <link
+          rel="stylesheet"
+          th:href="@{/css/calendar.css}"
+  >
+
+  <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+
+  <link rel="stylesheet" th:href="@{/css/app-theme.css}">
+
+  <link rel="stylesheet" th:href="@{/css/form-validate.css}">
+</head>
+
+<body>
+
+
+<!-- ========================================================= -->
+<!-- HEADER -->
+<!-- ========================================================= -->
+
+<header class="top-header">
+
+  <div class="header-left">
+
+    <div class="header-logo">
+
+      <i class="fa-regular fa-calendar"></i>
+
+    </div>
+
+    <div>
+
+      <h1>
+        Campus Booking System
+      </h1>
+
+      <p>
+        Faculty Dashboard
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="header-right">
+
+
+    <!-- NOTIFICATIONS -->
+
+    <div class="notification-wrapper">
+
+      <button
+              type="button"
+              class="notification-button"
+              id="notificationButton"
+      >
+
+        <i class="fa-regular fa-bell"></i>
+
+        <span class="notification-count"
+              th:if="${unreadCount != null and unreadCount > 0}"
+              th:text="${unreadCount}">0</span>
+
+      </button>
+
+
+      <div
+              class="notification-dropdown"
+              id="notificationDropdown"
+      >
+
+        <div class="notification-header">
+
+          <div>
+
+            <h3>
+              Notifications
+            </h3>
+
+            <span th:text="${(unreadCount != null ? unreadCount : 0) + ' unread'}">0 unread</span>
+
+          </div>
+
+          <form th:action="@{/notifications/read-all}" method="post">
+            <button type="submit">Mark all read</button>
+          </form>
+
+        </div>
+
+
+        <a th:href="@{/notifications}" class="notification-viewall"
+           style="display:block;padding:8px 14px;font-size:13px;font-weight:600;color:#203e96;">
+          View all notifications
+        </a>
+
+
+        <div class="notification-empty"
+             th:if="${notifications == null or #lists.isEmpty(notifications)}">
+          You have no notifications yet.
+        </div>
+
+
+        <div class="notification-item"
+             th:each="note : ${notifications}"
+             th:classappend="${note.read} ? 'is-read' : 'is-unread'">
+
+          <div class="notification-icon"
+               th:classappend="${#strings.toLowerCase(note.type)}">
+            <i class="fa-solid fa-check" th:if="${note.type == 'APPROVED'}"></i>
+            <i class="fa-solid fa-xmark" th:if="${note.type == 'REJECTED'}"></i>
+            <i class="fa-solid fa-exclamation" th:if="${note.type == 'PENDING'}"></i>
+            <i class="fa-regular fa-bell"
+               th:if="${note.type != 'APPROVED' and note.type != 'REJECTED' and note.type != 'PENDING'}"></i>
+          </div>
+
+          <div>
+            <strong th:text="${note.title}">Notification</strong>
+            <p th:text="${note.message}">Message</p>
+            <small th:text="${#temporals.format(note.createdAt, 'dd MMM yyyy, HH:mm')}">Just now</small>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- USER -->
+
+    <div class="user-details">
+
+      <strong
+              th:text="${user.fullName}"
+      >
+        Dr. Sarah Faculty
+      </strong>
+
+      <span
+              th:text="${user.email}"
+      >
+                faculty@university.edu
+            </span>
+
+    </div>
+
+
+    <!-- LOGOUT -->
+
+    <a
+            th:href="@{/logout}"
+            class="logout-link"
+    >
+
+      <i class="fa-solid fa-arrow-right-from-bracket"></i>
+
+      Logout
+
+    </a>
+
+  </div>
+
+</header>
+
+
+<!-- ========================================================= -->
+<!-- NAVIGATION -->
+<!-- ========================================================= -->
+
+<nav class="dashboard-nav">
+
+
+  <button
+          type="button"
+          class="nav-tab active"
+          data-tab="dashboardView"
+  >
+
+    <i class="fa-solid fa-table-cells-large"></i>
+
+    Dashboard
+
+  </button>
+
+
+  <button
+          type="button"
+          class="nav-tab"
+          data-tab="searchView"
+  >
+
+    <i class="fa-solid fa-magnifying-glass"></i>
+
+    Search
+
+  </button>
+
+
+  <button
+          type="button"
+          class="nav-tab"
+          data-tab="calendarView"
+  >
+
+    <i class="fa-regular fa-calendar"></i>
+
+    Calendar
+
+  </button>
+
+
+  <button
+          type="button"
+          class="new-booking-btn"
+          id="openBookingModal"
+  >
+
+    <i class="fa-solid fa-plus"></i>
+
+    New Booking
+
+  </button>
+
+</nav>
+
+
+<!-- ========================================================= -->
+<!-- MAIN -->
+<!-- ========================================================= -->
+
+<main class="main-content">
+
+
+  <!-- ===================================================== -->
+  <!-- DASHBOARD VIEW -->
+  <!-- ===================================================== -->
+
+  <section
+          id="dashboardView"
+          class="tab-view active-view"
+  >
+
+
+    <!-- SUCCESS -->
+
+    <div
+            class="success-alert"
+            th:if="${param.bookingSuccess}"
+    >
+
+      <i class="fa-solid fa-circle-check"></i>
+
+      Faculty booking created and automatically approved.
+
+    </div>
+
+
+    <!-- CANCELLED -->
+
+    <div
+            class="success-alert"
+            th:if="${param.bookingCancelled}"
+    >
+
+      <i class="fa-solid fa-circle-check"></i>
+
+      Booking cancelled successfully.
+
+    </div>
+
+
+    <!-- ERROR -->
+
+    <div
+            class="error-alert"
+            th:if="${param.cancelError}"
+    >
+
+      <i class="fa-solid fa-circle-exclamation"></i>
+
+      Booking could not be cancelled.
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- STAT CARDS -->
+    <!-- ================================================= -->
+
+    <div class="stats-grid">
+
+
+      <!-- TOTAL -->
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Total Bookings
+          </p>
+
+          <strong
+                  th:text="${totalBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon total">
+
+          <i class="fa-regular fa-calendar"></i>
+
+        </div>
+
+      </div>
+
+
+      <!-- PENDING -->
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Pending
+          </p>
+
+          <strong
+                  th:text="${pendingBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon pending">
+
+          <i class="fa-regular fa-clock"></i>
+
+        </div>
+
+      </div>
+
+
+      <!-- APPROVED -->
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Approved
+          </p>
+
+          <strong
+                  th:text="${approvedBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon approved">
+
+          <i class="fa-solid fa-check"></i>
+
+        </div>
+
+      </div>
+
+
+      <!-- REJECTED -->
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Rejected
+          </p>
+
+          <strong
+                  th:text="${rejectedBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon rejected">
+
+          <i class="fa-solid fa-xmark"></i>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- MY BOOKINGS -->
+    <!-- ================================================= -->
+
+    <section class="bookings-section">
+
+      <div class="section-header">
+
+        <h3>
+          My Bookings
+        </h3>
+
+      </div>
+
+
+      <!-- EMPTY -->
+
+      <div
+              class="empty-state"
+              th:if="${#lists.isEmpty(bookings)}"
+      >
+
+        <div class="empty-icon">
+
+          <i class="fa-regular fa-calendar-xmark"></i>
+
+        </div>
+
+        <h3>
+          No bookings yet
+        </h3>
+
+        <p>
+          Create your first faculty booking request.
+        </p>
+
+        <button
+                type="button"
+                class="new-booking-btn empty-new-booking"
+                id="openBookingModalEmpty"
+        >
+
+          <i class="fa-solid fa-plus"></i>
+
+          New Booking
+
+        </button>
+
+      </div>
+
+
+      <!-- TABLE -->
+
+      <div
+              class="table-wrapper"
+              th:unless="${#lists.isEmpty(bookings)}"
+      >
+
+        <table class="booking-table">
+
+          <thead>
+
+          <tr>
+
+            <th>
+              Room
+            </th>
+
+            <th>
+              Date & Time
+            </th>
+
+            <th>
+              Attendees
+            </th>
+
+            <th>
+              Description
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Action
+            </th>
+
+          </tr>
+
+          </thead>
+
+
+          <tbody>
+
+          <tr
+                  th:each="booking : ${bookings}"
+                  th:attr="data-status=${booking.status}"
+          >
+
+
+            <!-- ROOM -->
+
+            <td>
+
+              <div class="room-cell">
+
+                <i class="fa-solid fa-location-dot"></i>
+
+                <span
+                        th:text="${booking.room}"
+                >
+                                    Computer Lab B205
+                                </span>
+
+              </div>
+
+            </td>
+
+
+            <!-- DATE -->
+
+            <td>
+
+              <strong
+                      th:text="${booking.date}"
+              >
+                29/04/2026
+              </strong>
+
+              <span class="table-subtext">
+
+                                <span
+                                        th:text="${booking.startTime}"
+                                >
+                                    14:00
+                                </span>
+
+                                -
+
+                                <span
+                                        th:text="${booking.endTime}"
+                                >
+                                    16:00
+                                </span>
+
+                            </span>
+
+            </td>
+
+
+            <!-- ATTENDEES -->
+
+            <td>
+
+              <i class="fa-solid fa-users table-icon"></i>
+
+              <span
+                      th:text="${booking.numberOfAttendees}"
+              >
+                                35
+                            </span>
+
+            </td>
+
+
+            <!-- DESCRIPTION -->
+
+            <td>
+
+                            <span
+                                    class="description-text"
+                                    th:text="${booking.description != null && !booking.description.isBlank()
+                                    ? booking.description
+                                    : booking.eventType}"
+                            >
+                                Advanced Programming Class
+                            </span>
+
+            </td>
+
+
+            <!-- STATUS -->
+
+            <td>
+
+                            <span
+                                    class="status-badge"
+                                    th:classappend="${#strings.toLowerCase(booking.status)}"
+                                    th:text="${#strings.capitalize(#strings.toLowerCase(booking.status))}"
+                            >
+                                APPROVED
+                            </span>
+
+            </td>
+
+
+            <!-- ACTION -->
+
+            <td>
+
+              <form
+                      th:if="${(booking.status == 'PENDING' or booking.status == 'APPROVED')
+                               and (booking.date == null or !booking.date.isBefore(T(java.time.LocalDate).now()))}"
+                      th:action="@{'/booking/' + ${booking.id} + '/cancel'}"
+                      method="post"
+                      onsubmit="return confirm('Are you sure you want to cancel this booking?');"
+              >
+
+                <button
+                        type="submit"
+                        class="cancel-booking-button"
+                >
+
+                  <i class="fa-solid fa-ban"></i>
+
+                  Cancel
+
+                </button>
+
+              </form>
+
+
+              <span
+                      th:unless="${(booking.status == 'PENDING' or booking.status == 'APPROVED')
+                                   and (booking.date == null or !booking.date.isBefore(T(java.time.LocalDate).now()))}"
+                      class="no-action"
+              >
+                                —
+                            </span>
+
+            </td>
+
+          </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- SEARCH VIEW -->
+  <!-- ===================================================== -->
+
+  <section
+          id="searchView"
+          class="tab-view"
+  >
+
+
+    <div class="search-bar-card">
+
+
+      <div class="search-input">
+
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+                type="text"
+                id="facilitySearch"
+                placeholder="Search by room, requester, description, or department..."
+        >
+
+      </div>
+
+
+      <button
+              type="button"
+              class="filter-button"
+      >
+
+        <i class="fa-solid fa-filter"></i>
+
+        Filters
+
+      </button>
+
+
+      <button
+              type="button"
+              class="search-button"
+      >
+
+        Search
+
+      </button>
+
+    </div>
+
+
+    <!-- STATS AGAIN LIKE FIGMA -->
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Total Bookings
+          </p>
+
+          <strong
+                  th:text="${totalBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon total">
+
+          <i class="fa-regular fa-calendar"></i>
+
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Pending
+          </p>
+
+          <strong
+                  th:text="${pendingBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon pending">
+
+          <i class="fa-regular fa-clock"></i>
+
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Approved
+          </p>
+
+          <strong
+                  th:text="${approvedBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon approved">
+
+          <i class="fa-solid fa-check"></i>
+
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div>
+
+          <p>
+            Rejected
+          </p>
+
+          <strong
+                  th:text="${rejectedBookings}"
+          >
+            0
+          </strong>
+
+        </div>
+
+        <div class="stat-icon rejected">
+
+          <i class="fa-solid fa-xmark"></i>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- SAME BOOKING TABLE -->
+
+    <section class="bookings-section">
+
+      <div class="section-header">
+
+        <h3>
+          My Bookings
+        </h3>
+
+      </div>
+
+
+      <div
+              class="table-wrapper"
+              th:unless="${#lists.isEmpty(bookings)}"
+      >
+
+        <table class="booking-table">
+
+          <thead>
+
+          <tr>
+
+            <th>
+              Room
+            </th>
+
+            <th>
+              Date & Time
+            </th>
+
+            <th>
+              Attendees
+            </th>
+
+            <th>
+              Description
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Action
+            </th>
+
+          </tr>
+
+          </thead>
+
+          <tbody>
+
+          <tr
+                  class="searchable-booking"
+                  th:each="booking : ${bookings}"
+          >
+
+            <td
+                    th:text="${booking.room}"
+            >
+              Room
+            </td>
+
+
+            <td>
+
+                            <span
+                                    th:text="${booking.date}"
+                            >
+                                Date
+                            </span>
+
+              <span class="table-subtext">
+
+                                <span
+                                        th:text="${booking.startTime}"
+                                >
+                                    Start
+                                </span>
+
+                                -
+
+                                <span
+                                        th:text="${booking.endTime}"
+                                >
+                                    End
+                                </span>
+
+                            </span>
+
+            </td>
+
+
+            <td
+                    th:text="${booking.numberOfAttendees}"
+            >
+              0
+            </td>
+
+
+            <td
+                    th:text="${booking.description != null ? booking.description : booking.eventType}"
+            >
+              Description
+            </td>
+
+
+            <td>
+
+                            <span
+                                    class="status-badge"
+                                    th:classappend="${#strings.toLowerCase(booking.status)}"
+                                    th:text="${#strings.capitalize(#strings.toLowerCase(booking.status))}"
+                            >
+                                APPROVED
+                            </span>
+
+            </td>
+
+
+            <td>
+
+                            <span class="no-action">
+                                —
+                            </span>
+
+            </td>
+
+          </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- CALENDAR -->
+  <!-- ===================================================== -->
+
+  <section
+          id="calendarView"
+          class="tab-view"
+  >
+
+
+    <section class="calendar-section">
+
+      <div class="calendar-header">
+        <h2>Weekly Calendar</h2>
+      </div>
+
+      <div class="cal-toolbar">
+        <span class="cal-range" id="calendarRangeLabel">This week</span>
+        <div class="cal-nav">
+          <button type="button" id="calendarPrev" aria-label="Previous week">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button type="button" id="calendarNext" aria-label="Next week">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="calendarGrid"></div>
+
+    </section>
+
+  </section>
+
+</main>
+
+
+<!-- ========================================================= -->
+<!-- NEW FACULTY BOOKING MODAL -->
+<!-- ========================================================= -->
+
+<div
+        class="modal-overlay"
+        id="bookingModal"
+>
+
+  <div class="booking-modal">
+
+
+    <!-- HEADER -->
+
+    <div class="modal-header">
+
+      <div>
+
+        <h2>
+          New Booking Request
+        </h2>
+
+        <p>
+          Fill in all required details for your event
+        </p>
+
+      </div>
+
+
+      <button
+              type="button"
+              class="modal-close"
+              id="closeBookingModal"
+      >
+
+        <i class="fa-solid fa-xmark"></i>
+
+      </button>
+
+    </div>
+
+
+    <!-- FORM -->
+
+    <form
+            th:action="@{/booking}"
+            th:object="${booking}"
+            method="post"
+            class="js-validate" data-form="booking"
+    >
+
+      <div class="modal-body">
+
+
+        <!-- BASIC INFO -->
+
+        <h3>
+          Basic Information
+        </h3>
+
+
+        <!-- ROOM -->
+
+        <div class="modal-field full">
+
+          <label for="room">
+            Room *
+          </label>
+
+
+          <select
+                  id="room"
+                  th:field="*{room}"
+                  data-validate data-required
+          >
+
+            <option value="">
+              Select a room
+            </option>
+
+            <option th:each="r : ${rooms}"
+                    th:value="${r.name}"
+                    th:attr="data-capacity=${r.capacity}"
+                    th:text="${r.name + ' - ' + r.type + ' (Capacity: ' + r.capacity + ')'
+                              + (r.equipment != null and !#strings.isEmpty(r.equipment) ? ' - ' + r.equipment : '')}">
+              Room
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="modal-grid">
+
+
+          <!-- EVENT TYPE -->
+
+          <div class="modal-field">
+
+            <label for="eventType">
+              Event Type *
+            </label>
+
+            <select
+                    id="eventType"
+                    th:field="*{eventType}"
+                    data-validate data-required
+            >
+
+              <option value="">
+                Select event type
+              </option>
+
+              <option value="Academic">
+                Academic
+              </option>
+
+              <option value="Workshop">
+                Workshop
+              </option>
+
+              <option value="Seminar">
+                Seminar
+              </option>
+
+              <option value="Conference">
+                Conference
+              </option>
+
+              <option value="Club Meeting">
+                Club Meeting
+              </option>
+
+              <option value="Examination">
+                Examination
+              </option>
+
+              <option value="Other">
+                Other
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- DEPARTMENT -->
+
+          <div class="modal-field">
+
+            <label for="department">
+              Department *
+            </label>
+
+            <select
+                    id="department"
+                    th:field="*{department}"
+                    data-validate data-required
+            >
+
+              <option value="">
+                Select department
+              </option>
+
+              <option value="Computer Science">
+                Computer Science
+              </option>
+
+              <option value="Electrical Engineering">
+                Electrical Engineering
+              </option>
+
+              <option value="Mechanical Engineering">
+                Mechanical Engineering
+              </option>
+
+              <option value="Civil Engineering">
+                Civil Engineering
+              </option>
+
+              <option value="Business Administration">
+                Business Administration
+              </option>
+
+              <option value="Mathematics">
+                Mathematics
+              </option>
+
+              <option value="Physics">
+                Physics
+              </option>
+
+              <option value="Chemistry">
+                Chemistry
+              </option>
+
+              <option value="Student Affairs">
+                Student Affairs
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- PRIORITY -->
+
+          <div class="modal-field">
+
+            <label for="priority">
+              Priority Level *
+            </label>
+
+            <select
+                    id="priority"
+                    th:field="*{priority}"
+                    data-validate data-required
+            >
+
+              <option value="">
+                Select priority
+              </option>
+
+              <option value="Low">
+                Low - Regular Event
+              </option>
+
+              <option value="Medium">
+                Medium - Important Event
+              </option>
+
+              <option value="High">
+                High - Critical Event
+              </option>
+
+              <option value="Critical">
+                Critical - VIP/Emergency
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- ATTENDEES -->
+
+          <div class="modal-field">
+
+            <label for="numberOfAttendees">
+              Number of Attendees *
+            </label>
+
+            <input
+                    id="numberOfAttendees"
+                    type="number"
+                    min="1"
+                    th:field="*{numberOfAttendees}"
+                    data-validate data-required data-type="number" data-min="1"
+            >
+
+            <small id="capacityText">
+              Select a room to see capacity
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <!-- DATE TIME -->
+
+        <h3>
+          Date & Time
+        </h3>
+
+
+        <div class="modal-grid">
+
+
+          <div class="modal-field">
+
+            <label for="bookingDate">
+              Date *
+            </label>
+
+            <input
+                    id="bookingDate"
+                    type="date"
+                    th:field="*{date}"
+                    data-validate data-required
+            >
+
+          </div>
+
+
+          <div class="recurring-row">
+
+            <input
+                    id="recurring"
+                    type="checkbox"
+                    th:field="*{recurring}"
+            >
+
+            <label for="recurring">
+
+              <i class="fa-solid fa-repeat"></i>
+
+              Recurring Event
+
+            </label>
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label for="startTime">
+              Start Time *
+            </label>
+
+            <input
+                    id="startTime"
+                    type="time"
+                    th:field="*{startTime}"
+                    data-validate data-required
+            >
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label for="endTime">
+              End Time *
+            </label>
+
+            <input
+                    id="endTime"
+                    type="time"
+                    th:field="*{endTime}"
+                    data-validate data-required
+            >
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label for="setupTime">
+              Setup Time (minutes)
+            </label>
+
+            <input
+                    id="setupTime"
+                    type="number"
+                    min="0"
+                    th:field="*{setupTime}"
+                    placeholder="0"
+            >
+
+          </div>
+
+
+          <div class="modal-field">
+
+            <label for="cleanupTime">
+              Cleanup Time (minutes)
+            </label>
+
+            <input
+                    id="cleanupTime"
+                    type="number"
+                    min="0"
+                    th:field="*{cleanupTime}"
+                    placeholder="0"
+            >
+
+          </div>
+
+        </div>
+
+
+        <!-- EQUIPMENT -->
+
+        <h3>
+          Equipment Needed
+        </h3>
+
+
+        <div class="equipment-grid">
+
+          <label>
+
+            <input
+                    type="checkbox"
+                    class="equipment-check"
+                    value="Projector"
+            >
+
+            Projector
+
+          </label>
+
+
+          <label>
+
+            <input
+                    type="checkbox"
+                    class="equipment-check"
+                    value="Whiteboard"
+            >
+
+            Whiteboard
+
+          </label>
+
+
+          <label>
+
+            <input
+                    type="checkbox"
+                    class="equipment-check"
+                    value="Audio System"
+            >
+
+            Audio System
+
+          </label>
+
+
+          <label>
+
+            <input
+                    type="checkbox"
+                    class="equipment-check"
+                    value="Podium"
+            >
+
+            Podium
+
+          </label>
+
+
+          <label>
+
+            <input
+                    type="checkbox"
+                    class="equipment-check"
+                    value="WiFi"
+            >
+
+            WiFi
+
+          </label>
+
+        </div>
+
+
+        <input
+                type="hidden"
+                id="equipmentNeeded"
+                th:field="*{equipmentNeeded}"
+        >
+
+
+        <!-- DESCRIPTION -->
+
+        <h3>
+          Event Description
+        </h3>
+
+
+        <div class="modal-field full">
+
+                    <textarea
+                            id="description"
+                            th:field="*{description}"
+                            rows="5"
+                            placeholder="Provide detailed information about your event..."
+                    ></textarea>
+
+        </div>
+
+      </div>
+
+
+      <!-- FOOTER -->
+
+      <div class="modal-footer">
+
+        <button
+                type="button"
+                class="cancel-modal-btn"
+                id="cancelBookingModal"
+        >
+          Cancel
+        </button>
+
+
+        <button
+                type="submit"
+                class="submit-booking-btn"
+        >
+          Submit Request
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script>
+
+  document.addEventListener(
+          "DOMContentLoaded",
+          function () {
+
+
+            // =================================================
+            // TABS
+            // =================================================
+
+            const tabs =
+                    document.querySelectorAll(".nav-tab");
+
+            const views =
+                    document.querySelectorAll(".tab-view");
+
+
+            tabs.forEach(function (tab) {
+
+              tab.addEventListener(
+                      "click",
+                      function () {
+
+                        const targetId =
+                                tab.dataset.tab;
+
+
+                        tabs.forEach(function (item) {
+
+                          item.classList.remove("active");
+
+                        });
+
+
+                        views.forEach(function (view) {
+
+                          view.classList.remove("active-view");
+
+                        });
+
+
+                        tab.classList.add("active");
+
+
+                        const target =
+                                document.getElementById(
+                                        targetId
+                                );
+
+
+                        if (target) {
+
+                          target.classList.add(
+                                  "active-view"
+                          );
+
+                        }
+
+                      }
+              );
+
+            });
+
+
+            // =================================================
+            // MODAL
+            // =================================================
+
+            const modal =
+                    document.getElementById(
+                            "bookingModal"
+                    );
+
+            const openButton =
+                    document.getElementById(
+                            "openBookingModal"
+                    );
+
+            const emptyButton =
+                    document.getElementById(
+                            "openBookingModalEmpty"
+                    );
+
+            const closeButton =
+                    document.getElementById(
+                            "closeBookingModal"
+                    );
+
+            const cancelButton =
+                    document.getElementById(
+                            "cancelBookingModal"
+                    );
+
+
+            function openModal() {
+
+              modal.classList.add("show");
+
+              document.body.style.overflow =
+                      "hidden";
+
+            }
+
+
+            function closeModal() {
+
+              modal.classList.remove("show");
+
+              document.body.style.overflow =
+                      "";
+
+            }
+
+
+            if (openButton) {
+
+              openButton.addEventListener(
+                      "click",
+                      openModal
+              );
+
+            }
+
+
+            if (emptyButton) {
+
+              emptyButton.addEventListener(
+                      "click",
+                      openModal
+              );
+
+            }
+
+
+            if (closeButton) {
+
+              closeButton.addEventListener(
+                      "click",
+                      closeModal
+              );
+
+            }
+
+
+            if (cancelButton) {
+
+              cancelButton.addEventListener(
+                      "click",
+                      closeModal
+              );
+
+            }
+
+
+            modal.addEventListener(
+                    "click",
+                    function (event) {
+
+                      if (event.target === modal) {
+
+                        closeModal();
+
+                      }
+
+                    }
+            );
+
+
+            // =================================================
+            // NOTIFICATIONS
+            // =================================================
+
+            const notificationButton =
+                    document.getElementById(
+                            "notificationButton"
+                    );
+
+            const notificationDropdown =
+                    document.getElementById(
+                            "notificationDropdown"
+                    );
+
+
+            if (
+                    notificationButton &&
+                    notificationDropdown
+            ) {
+
+              notificationButton.addEventListener(
+                      "click",
+                      function (event) {
+
+                        event.stopPropagation();
+
+                        notificationDropdown
+                                .classList
+                                .toggle(
+                                        "show"
+                                );
+
+                      }
+              );
+
+
+              notificationDropdown.addEventListener(
+                      "click",
+                      function (event) {
+
+                        event.stopPropagation();
+
+                      }
+              );
+
+
+              document.addEventListener(
+                      "click",
+                      function () {
+
+                        notificationDropdown
+                                .classList
+                                .remove(
+                                        "show"
+                                );
+
+                      }
+              );
+
+            }
+
+
+            // =================================================
+            // SEARCH
+            // =================================================
+
+            const searchInput =
+                    document.getElementById(
+                            "facilitySearch"
+                    );
+
+
+            if (searchInput) {
+
+              searchInput.addEventListener(
+                      "input",
+                      function () {
+
+                        const value =
+                                searchInput
+                                        .value
+                                        .toLowerCase()
+                                        .trim();
+
+
+                        const rows =
+                                document.querySelectorAll(
+                                        ".searchable-booking"
+                                );
+
+
+                        rows.forEach(
+                                function (row) {
+
+                                  const text =
+                                          row.innerText
+                                                  .toLowerCase();
+
+
+                                  row.style.display =
+                                          text.includes(
+                                                  value
+                                          )
+                                                  ? ""
+                                                  : "none";
+
+                                }
+                        );
+
+                      }
+              );
+
+            }
+
+
+            // =================================================
+            // ROOM CAPACITY
+            // =================================================
+
+            const roomSelect =
+                    document.getElementById(
+                            "room"
+                    );
+
+            const capacityText =
+                    document.getElementById(
+                            "capacityText"
+                    );
+
+            const attendees =
+                    document.getElementById(
+                            "numberOfAttendees"
+                    );
+
+
+            function updateCapacity() {
+
+              if (!roomSelect || !capacityText || !attendees) {
+                return;
+              }
+
+              const selectedOption =
+                      roomSelect.options[roomSelect.selectedIndex];
+
+              const capacity =
+                      selectedOption
+                              ? parseInt(selectedOption.getAttribute("data-capacity"), 10)
+                              : null;
+
+
+              if (capacity) {
+
+                capacityText.textContent =
+                        "Room capacity: " +
+                        capacity +
+                        " people";
+
+
+                attendees.max =
+                        capacity;
+
+              } else {
+
+                capacityText.textContent =
+                        "Select a room to see capacity";
+
+
+                attendees.removeAttribute(
+                        "max"
+                );
+
+              }
+
+            }
+
+
+            roomSelect.addEventListener(
+                    "change",
+                    updateCapacity
+            );
+
+
+            updateCapacity();
+
+
+            // =================================================
+            // EQUIPMENT
+            // =================================================
+
+            const equipmentChecks =
+                    document.querySelectorAll(
+                            ".equipment-check"
+                    );
+
+            const equipmentField =
+                    document.getElementById(
+                            "equipmentNeeded"
+                    );
+
+
+            equipmentChecks.forEach(
+                    function (checkbox) {
+
+                      checkbox.addEventListener(
+                              "change",
+                              function () {
+
+                                const selected =
+                                        [];
+
+
+                                equipmentChecks.forEach(
+                                        function (item) {
+
+                                          if (item.checked) {
+
+                                            selected.push(
+                                                    item.value
+                                            );
+
+                                          }
+
+                                        }
+                                );
+
+
+                                equipmentField.value =
+                                        selected.join(
+                                                ", "
+                                        );
+
+                              }
+                      );
+
+                    }
+            );
+
+
+            // =================================================
+            // PREVENT PAST DATES
+            // =================================================
+
+            const dateInput =
+                    document.getElementById(
+                            "bookingDate"
+                    );
+
+
+            if (dateInput) {
+
+              const today =
+                      new Date();
+
+
+              const year =
+                      today.getFullYear();
+
+
+              const month =
+                      String(
+                              today.getMonth() + 1
+                      ).padStart(
+                              2,
+                              "0"
+                      );
+
+
+              const day =
+                      String(
+                              today.getDate()
+                      ).padStart(
+                              2,
+                              "0"
+                      );
+
+
+              dateInput.min =
+                      year +
+                      "-" +
+                      month +
+                      "-" +
+                      day;
+
+            }
+
+          }
+  );
+
+</script>
+
+<script th:inline="javascript">
+  window.CALENDAR_EVENTS = /*[[${calendarEvents}]]*/ [];
+</script>
+<script th:src="@{/js/calendar.js}"></script>
+
+<script th:src="@{/js/form-validate.js}"></script>
+</body>
+</html>

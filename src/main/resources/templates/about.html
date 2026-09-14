@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>About | KOI University</title>
+
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" th:href="@{/css/about.css}">
+
+  <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+</head>
+
+<body>
+
+<div class="top-bar">
+  <div class="container top-bar-content">
+
+    <div class="top-links">
+      <a href="#">Campus Map</a>
+      <a href="#">Directory</a>
+      <a href="#">Library</a>
+      <a href="#">IT Services</a>
+    </div>
+
+    <div class="portal-links">
+      <a href="#">Student Portal</a>
+      <span>|</span>
+      <a href="#">Staff Portal</a>
+    </div>
+
+  </div>
+</div>
+
+<header class="main-header">
+
+  <div class="container navigation">
+
+    <a th:href="@{/}" class="brand">
+
+      <div class="brand-logo">KOI</div>
+
+      <div class="brand-text">
+        <h1>KOI University</h1>
+        <p>Facility Booking System</p>
+      </div>
+
+    </a>
+
+    <nav class="main-nav">
+      <a th:href="@{/}">Home</a>
+      <a th:href="@{/about}" class="active">About</a>
+      <a th:href="@{/signin}">Sign In</a>
+      <a href="#" class="register-button">Register</a>
+    </nav>
+
+  </div>
+
+</header>
+
+<section class="about-hero">
+
+  <div class="container">
+    <h2>About the Booking System</h2>
+
+    <p>
+      Developed by University IT Services to streamline facility
+      reservations across campus
+    </p>
+  </div>
+
+</section>
+
+<section class="overview-section">
+
+  <div class="container overview-grid">
+
+    <div class="overview-text">
+
+      <h2>System Overview</h2>
+
+      <p>
+        The University Facility Booking System was launched to address
+        the growing demand for an efficient, centralised platform to
+        manage campus room reservations and event scheduling.
+      </p>
+
+      <p>
+        Before this system, room bookings were handled through emails,
+        phone calls and physical forms, leading to double bookings,
+        scheduling conflicts and administrative overhead.
+      </p>
+
+      <p>
+        This web-based platform provides students, faculty and staff
+        with 24/7 access to check availability, submit booking requests
+        and receive instant confirmations.
+      </p>
+
+      <p>
+        The system covers 54 facilities across campus including lecture
+        halls, computer labs, auditoriums, meeting rooms and specialised
+        spaces.
+      </p>
+
+    </div>
+
+    <div class="numbers-card">
+
+      <h2>By the Numbers</h2>
+
+      <div class="number-row">
+        <span>Total Facilities</span>
+        <strong>54</strong>
+      </div>
+
+      <div class="number-row">
+        <span>Active Users</span>
+        <strong>2,847</strong>
+      </div>
+
+      <div class="number-row">
+        <span>Bookings This Year</span>
+        <strong>8,234</strong>
+      </div>
+
+      <div class="number-row">
+        <span>Departments Served</span>
+        <strong>18</strong>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<section class="key-features-section">
+
+  <div class="container">
+
+    <div class="section-heading">
+      <h2>Key Features</h2>
+      <p>Built for the university community</p>
+    </div>
+
+    <div class="about-feature-grid">
+
+      <article class="about-feature-card">
+
+        <div class="square-icon">
+          <i class="fa-regular fa-circle-check"></i>
+        </div>
+
+        <h3>Automated Approvals</h3>
+
+        <p>
+          Booking requests are routed to appropriate administrators
+          for quick approval.
+        </p>
+
+      </article>
+
+      <article class="about-feature-card">
+
+        <div class="square-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+
+        <h3>Conflict Prevention</h3>
+
+        <p>
+          The system automatically detects scheduling conflicts and
+          double bookings.
+        </p>
+
+      </article>
+
+      <article class="about-feature-card">
+
+        <div class="square-icon">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+
+        <h3>Instant Notifications</h3>
+
+        <p>
+          Receive email confirmation when your booking is approved or
+          changed.
+        </p>
+
+      </article>
+
+    </div>
+
+  </div>
+
+</section>
+
+<section class="contact-banner">
+
+  <div class="container">
+
+    <h2>Questions or Feedback?</h2>
+
+    <p>
+      Contact our Facilities Office for assistance with bookings or system support
+    </p>
+
+    <div class="contact-details">
+
+      <div>
+        <span>Email</span>
+        <strong>facilities@university.edu</strong>
+      </div>
+
+      <div>
+        <span>Phone</span>
+        <strong>(555) 123-4567</strong>
+      </div>
+
+      <div>
+        <span>Office Hours</span>
+        <strong>Mon–Fri 8AM–5PM</strong>
+      </div>
+
+    </div>
+
+    <a href="#" class="contact-button">
+      Create Account
+    </a>
+
+  </div>
+
+</section>
+
+<footer class="site-footer">
+
+  <div class="footer-bottom">
+    © 2026 KOI University. All rights reserved.
+  </div>
+
+</footer>
+
+</body>
+</html>

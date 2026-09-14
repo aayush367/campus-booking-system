@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Registered Users | KOI University</title>
+
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" th:href="@{/css/admin-users.css}">
+</head>
+
+<body class="admin-users-body">
+
+<header class="admin-header">
+
+  <div class="container admin-header-content">
+
+    <a th:href="@{/}" class="brand">
+
+      <div class="brand-logo">
+        KOI
+      </div>
+
+      <div class="brand-text">
+        <h1>KOI University</h1>
+        <p>Facility Booking System</p>
+      </div>
+
+    </a>
+
+    <a th:href="@{/}" class="back-home">
+      Back to Home
+    </a>
+
+  </div>
+
+</header>
+
+<main class="admin-users-main">
+
+  <div class="container">
+
+    <div class="page-heading">
+
+      <div>
+        <h2>Registered Users</h2>
+        <p>View all accounts stored in the campus booking system.</p>
+      </div>
+
+      <div class="user-total">
+        Total users:
+        <strong th:text="${#lists.size(users)}">0</strong>
+      </div>
+
+    </div>
+
+    <div class="table-card">
+
+      <div class="empty-message" th:if="${#lists.isEmpty(users)}">
+        No registered users were found.
+      </div>
+
+      <div class="table-wrapper" th:unless="${#lists.isEmpty(users)}">
+
+        <table>
+
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Account Type</th>
+            <th>Department</th>
+            <th>Student/Staff ID</th>
+          </tr>
+          </thead>
+
+          <tbody>
+
+          <tr th:each="user : ${users}">
+
+            <td th:text="${user.id}">
+              1
+            </td>
+
+            <td th:text="${user.fullName}">
+              John Doe
+            </td>
+
+            <td th:text="${user.email}">
+              john@university.edu
+            </td>
+
+            <td th:text="${user.phone != null && !user.phone.isBlank() ? user.phone : '-'}">
+              -
+            </td>
+
+            <td>
+                            <span
+                                    class="account-badge"
+                                    th:text="${user.accountType}"
+                            >
+                                STUDENT
+                            </span>
+            </td>
+
+            <td th:text="${user.department}">
+              Computer Science
+            </td>
+
+            <td th:text="${user.studentId}">
+              20260001
+            </td>
+
+          </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="admin-footer">
+  © 2026 KOI University. All rights reserved.
+</footer>
+
+</body>
+</html>

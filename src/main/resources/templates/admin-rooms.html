@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room Management | KOI University</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" th:href="@{/css/admin-users.css}">
+  <link rel="stylesheet" th:href="@{/css/form-validate.css}">
+  <style>
+    .rooms-layout { display: grid; grid-template-columns: 340px 1fr; gap: 26px; align-items: start; }
+    .panel { background: #fff; border: 1px solid #dce1e9; border-radius: 10px; padding: 22px;
+             box-shadow: 0 7px 20px rgba(16,24,40,.06); }
+    .panel h3 { margin-bottom: 16px; font-size: 18px; }
+    .panel-field { margin-bottom: 4px; }
+    .panel label { display: block; margin: 12px 0 5px; font-size: 13px; font-weight: 600; color: #3f4d63; }
+    .panel input, .panel select, .panel textarea {
+      width: 100%; padding: 9px 11px; border: 1px solid #cfd5df; border-radius: 6px; font-size: 14px; }
+    .panel .btn { margin-top: 16px; width: 100%; padding: 10px; border: 0; border-radius: 6px;
+                  background: #203e96; color: #fff; font-weight: 700; cursor: pointer; }
+    .alert-ok { background: #e7f6ec; color: #1c7a3f; padding: 11px 14px; border-radius: 6px; margin-bottom: 16px; }
+    .alert-err { background: #fdecec; color: #b3261e; padding: 11px 14px; border-radius: 6px; margin-bottom: 16px; }
+    .inline-form { display: inline; }
+    .mini-btn { padding: 6px 10px; border: 1px solid #cfd5df; border-radius: 5px; background: #fff;
+                font-size: 12px; font-weight: 600; cursor: pointer; }
+    .mini-btn.danger { color: #b3261e; border-color: #f0c4c1; }
+    .status-pill { padding: 4px 9px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+    .status-pill.on { background: #e7f6ec; color: #1c7a3f; }
+    .status-pill.off { background: #f1f2f4; color: #6b7280; }
+    @media (max-width: 900px) { .rooms-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+
+<body class="admin-users-body">
+
+<header class="admin-header">
+  <div class="container admin-header-content">
+    <a th:href="@{/admin/dashboard}" class="brand">
+      <div class="brand-logo">KOI</div>
+      <div class="brand-text">
+        <h1>KOI University</h1>
+        <p>Facility Booking System</p>
+      </div>
+    </a>
+    <a th:href="@{/admin/dashboard}" class="back-home">Back to Dashboard</a>
+  </div>
+</header>
+
+<main class="admin-users-main">
+  <div class="container">
+
+    <div class="page-heading">
+      <div>
+        <h2>Room Management</h2>
+        <p>Add, edit, activate or remove bookable facilities.</p>
+      </div>
+      <div class="user-total">
+        Total rooms:
+        <strong th:text="${#lists.size(rooms)}">0</strong>
+      </div>
+    </div>
+
+    <div class="alert-ok" th:if="${param.created}">Room created successfully.</div>
+    <div class="alert-ok" th:if="${param.updated}">Room updated successfully.</div>
+    <div class="alert-ok" th:if="${param.deleted}">Room deleted.</div>
+    <div class="alert-err" th:if="${error}" th:text="${error}">Error</div>
+
+    <div class="rooms-layout">
+
+      <!-- CREATE -->
+      <div class="panel">
+        <h3>Add New Room</h3>
+        <form th:action="@{/admin/rooms}" th:object="${room}" method="post" class="js-validate">
+
+          <div class="panel-field">
+            <label>Room Name *</label>
+            <input type="text" th:field="*{name}" placeholder="e.g. Seminar Room E204"
+                   data-validate data-required data-label="Room name">
+          </div>
+
+          <div class="panel-field">
+            <label>Type *</label>
+            <select th:field="*{type}" data-validate data-required data-label="Type">
+              <option value="">Select type</option>
+              <option value="Lecture Hall">Lecture Hall</option>
+              <option value="Lab">Lab</option>
+              <option value="Auditorium">Auditorium</option>
+              <option value="Meeting Room">Meeting Room</option>
+              <option value="Classroom">Classroom</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="panel-field">
+            <label>Capacity *</label>
+            <input type="number" min="1" th:field="*{capacity}" placeholder="e.g. 40"
+                   data-validate data-required data-type="number" data-min="1" data-label="Capacity">
+          </div>
+
+          <div class="panel-field">
+            <label>Building</label>
+            <input type="text" th:field="*{building}" placeholder="e.g. Science Building">
+          </div>
+
+          <div class="panel-field">
+            <label>Equipment (comma separated)</label>
+            <textarea th:field="*{equipment}" rows="3"
+                      placeholder="Projector, Whiteboard, WiFi"></textarea>
+          </div>
+
+          <button type="submit" class="btn">Create Room</button>
+        </form>
+      </div>
+
+      <!-- LIST -->
+      <div class="table-card">
+        <div class="empty-message" th:if="${#lists.isEmpty(rooms)}">
+          No rooms yet. Add your first room on the left.
+        </div>
+        <div class="table-wrapper" th:unless="${#lists.isEmpty(rooms)}">
+          <table>
+            <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Capacity</th>
+              <th>Building</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${rooms}">
+              <td th:text="${r.name}">Room</td>
+              <td th:text="${r.type}">Type</td>
+              <td th:text="${r.capacity}">0</td>
+              <td th:text="${r.building != null ? r.building : '-'}">-</td>
+              <td>
+                <span class="status-pill on" th:if="${r.active}">Active</span>
+                <span class="status-pill off" th:unless="${r.active}">Inactive</span>
+              </td>
+              <td>
+                <form class="inline-form" method="post"
+                      th:action="@{'/admin/rooms/' + ${r.id} + '/status'}">
+                  <input type="hidden" name="active" th:value="${!r.active}">
+                  <button type="submit" class="mini-btn"
+                          th:text="${r.active} ? 'Deactivate' : 'Activate'">Toggle</button>
+                </form>
+                <form class="inline-form" method="post"
+                      th:action="@{'/admin/rooms/' + ${r.id} + '/delete'}"
+                      onsubmit="return confirm('Delete this room permanently?');">
+                  <button type="submit" class="mini-btn danger">Delete</button>
+                </form>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<footer class="admin-footer">
+  © 2026 KOI University. All rights reserved.
+</footer>
+
+<script th:src="@{/js/form-validate.js}"></script>
+</body>
+</html>
